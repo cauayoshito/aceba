@@ -6,14 +6,12 @@
   "use strict";
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const clientModuleUrl = document.currentScript
-    ? new URL("supabase-client.js", document.currentScript.src).href
-    : "js/supabase-client.js";
   const siteSettings = {
     phone: "(71) 99736-4451",
     whatsapp: "5571997364451",
     email: "contato@aceba.org.br",
     instagram: "#",
+    facebook: "#",
     pix_key: "05.133.450/0001-76",
     address: "Rua São Bento, Quadra 3, Lote 13, Buris de Abrantes, Vila de Abrantes, Camaçari · Bahia · 42825-000",
   };
@@ -429,15 +427,20 @@
       if (siteSettings.instagram !== "#") link.href = siteSettings.instagram;
     });
 
+    document.querySelectorAll('a[aria-label*="Facebook"]').forEach((link) => {
+      if (siteSettings.facebook !== "#") link.href = siteSettings.facebook;
+    });
+
     document.querySelectorAll('[data-site-setting="address"]').forEach((node) => {
       node.innerHTML = escapeHtml(siteSettings.address).replace(/\n/g, "<br>");
     });
   }
 
   async function loadSupabasePublicData() {
+    if (!window.isSupabaseConfigured || !window.supabaseClient) return;
+
     try {
-      const { supabase, isSupabaseConfigured } = await import(clientModuleUrl);
-      if (!isSupabaseConfigured || !supabase) return;
+      const supabase = window.supabaseClient;
 
       const [partners, projects, gallery, documents, settings] = await Promise.all([
         supabase.from("partners").select("name,logo_url,website_url").eq("is_active", true).order("sort_order", { ascending: true }),
@@ -453,7 +456,7 @@
       if (!documents.error) renderPublicDocuments(documents.data || []);
       if (!settings.error) applyPublicSettings(settings.data || []);
     } catch (error) {
-      console.info("Supabase público não configurado; usando conteúdo estático.", error);
+      console.warn("[ACEBA Supabase]", error);
     }
   }
 

@@ -2318,6 +2318,18 @@ strong { font-weight: 600; color: var(--text); }
   color: var(--gold);
 }
 
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-logo img {
+  height: 56px;
+  width: auto;
+  object-fit: contain;
+}
+
 .footer-brand .brand-name {
   color: var(--bone);
 }

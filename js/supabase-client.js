@@ -1,15 +1,27 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+/* ================================================================
+   ACEBA: Supabase client
+   - Apenas anon key (NUNCA service_role_key)
+   - Expõe window.supabaseClient + window.isSupabaseConfigured
+   ================================================================ */
 
-export const SUPABASE_URL = "https://cgvdzxklsjxudhpmripa.supabase.co";
-export const SUPABASE_ANON_KEY =
-  "sb_publishable_NL6uC5IbumZ1BsuHrxHKyw_lCTbacZK";
+const SUPABASE_URL = "https://cgvdzxklsjxudhpmripa.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_NL6uC5IbumZ1BsuHrxHKyw_lCTbacZK";
 
-export const isSupabaseConfigured =
-  SUPABASE_URL.startsWith("https://") &&
+// Sentinelas: se a URL/key parecerem placeholder, não inicializa.
+const URL_LOOKS_VALID =
+  typeof SUPABASE_URL === "string" &&
+  /^https:\/\/[a-z0-9-]+\.supabase\.co/i.test(SUPABASE_URL) &&
+  !/COLE_A|YOUR_SUPABASE|EXEMPLO/i.test(SUPABASE_URL);
+
+const KEY_LOOKS_VALID =
+  typeof SUPABASE_ANON_KEY === "string" &&
   SUPABASE_ANON_KEY.length > 30 &&
-  !SUPABASE_URL.includes("COLE_AQUI") &&
-  !SUPABASE_ANON_KEY.includes("COLE_AQUI");
+  !/COLE_A|YOUR_SUPABASE|EXEMPLO/i.test(SUPABASE_ANON_KEY);
 
-export const supabase = isSupabaseConfigured
-  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
+const supabase =
+  window.supabase && URL_LOOKS_VALID && KEY_LOOKS_VALID
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+window.supabaseClient = supabase;
+window.isSupabaseConfigured = Boolean(supabase);

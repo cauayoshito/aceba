@@ -5,6 +5,8 @@ Site institucional da Associação Comunitária Estiva Buris de Abrantes, com fr
 ## Stack
 
 - HTML, CSS e JavaScript puro
+- Não usa Next, Vite, bundler ou `.env.local`
+- Supabase via CDN global no HTML
 - Supabase Auth para login administrativo
 - Supabase Database com RLS para dados públicos e gestão interna
 - Supabase Storage opcional para hospedar logos, fotos e documentos
@@ -64,8 +66,8 @@ values ('COLE_AQUI_O_ID_DO_USUARIO_AUTH', 'admin@aceba.org.br');
 8. Cole os valores em `js/supabase-client.js`:
 
 ```js
-export const SUPABASE_URL = "https://seu-projeto.supabase.co";
-export const SUPABASE_ANON_KEY = "sua-anon-key";
+const SUPABASE_URL = "https://seu-projeto.supabase.co";
+const SUPABASE_ANON_KEY = "sua-anon-key";
 ```
 
 Não coloque `service_role_key` no frontend.
@@ -92,6 +94,7 @@ Campos de configurações disponíveis:
 - `whatsapp`
 - `email`
 - `instagram`
+- `facebook`
 - `pix_key`
 - `address`
 
@@ -130,7 +133,7 @@ http://localhost:8000
 http://localhost:8000/admin/login.html
 ```
 
-Abrir `index.html` direto por `file://` pode funcionar para o site estático, mas o admin e imports de módulo funcionam melhor via servidor local.
+Abrir `index.html` direto por `file://` pode funcionar para o site estático, mas o admin e os scripts do Supabase funcionam melhor via servidor local.
 
 ## Checklist antes de publicar
 
