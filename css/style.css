@@ -572,7 +572,7 @@ strong { font-weight: 600; color: var(--text); }
 /* =============== HERO =============== */
 .hero {
   position: relative;
-  min-height: clamp(640px, 92vh, 880px);
+  min-height: clamp(640px, 92vh, 860px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -582,70 +582,66 @@ strong { font-weight: 600; color: var(--text); }
   padding-top: 76px;
 }
 
-/* Imagem ancorada à direita */
+/* Foto da ACEBA cobre todo o hero */
 .hero-media {
   position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  left: 38%;
+  inset: 0;
   z-index: 0;
 }
 
 .hero-image {
   width: 100%;
-  height: 100%;
+  height: 110%;   /* margem extra para o parallax */
   object-fit: cover;
-  object-position: center 20%;
-  animation: heroImgIn 1.4s 0.2s var(--ease) both;
+  object-position: 62% center;
+  will-change: transform;
+  transform-origin: center top;
+  animation: heroImgIn 1.6s 0.1s var(--ease) both;
 }
 
-/* Fade branco esquerda → direita */
+/* Fade orgânico: cobre só a área do texto */
 .hero-fade {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(
-    to right,
-    #FFFFFF 0%,
-    #FFFFFF 30%,
-    rgba(255, 255, 255, 0.93) 42%,
-    rgba(255, 255, 255, 0.62) 56%,
-    rgba(255, 255, 255, 0.18) 76%,
-    rgba(255, 255, 255, 0) 100%
-  );
-}
-
-.hero-fade::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(248, 243, 232, 0.25) 0%,
-    transparent 30%
-  );
+  background:
+    linear-gradient(
+      to right,
+      #FFFFFF 0%,
+      #FFFFFF 26%,
+      rgba(255, 255, 255, 0.97) 34%,
+      rgba(255, 255, 255, 0.85) 44%,
+      rgba(255, 255, 255, 0.5)  56%,
+      rgba(255, 255, 255, 0.12) 70%,
+      rgba(255, 255, 255, 0)    84%
+    ),
+    linear-gradient(
+      to top,
+      rgba(255, 255, 255, 0.18) 0%,
+      transparent 18%
+    );
 }
 
 .hero-shell {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.75fr);
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
   align-items: center;
-  gap: 48px;
-  padding-block: 80px 96px;
+  gap: 40px;
+  padding-block: 96px 112px;
   min-height: inherit;
 }
 
+/* TEXT COLUMN */
 .hero-copy {
-  max-width: 680px;
-  animation: heroCopyIn 1s 0.12s var(--ease) both;
+  max-width: 560px;
+  animation: heroCopyIn 0.9s 0.15s var(--ease) both;
 }
 
 .hero-copy .eyebrow {
   color: var(--green);
-  margin-bottom: 1.6rem;
+  margin-bottom: 1.4rem;
 }
 
 .hero-copy .eyebrow-dot {
@@ -653,12 +649,12 @@ strong { font-weight: 600; color: var(--text); }
 }
 
 .hero-text {
-  color: rgba(18, 51, 34, 0.8);
-  font-size: clamp(1rem, 1.3vw, 1.12rem);
-  margin-top: 1.5rem;
-  margin-bottom: 2.5rem;
-  max-width: 50ch;
-  line-height: 1.7;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.25vw, 1.1rem);
+  margin-top: 1.25rem;
+  margin-bottom: 2.25rem;
+  max-width: 48ch;
+  line-height: 1.75;
 }
 
 .hero-text strong {
@@ -695,43 +691,45 @@ strong { font-weight: 600; color: var(--text); }
   border-color: rgba(18, 51, 34, 0.5);
 }
 
-/* HERO CARD */
+/* STATS CARD: flutua sobre a foto */
 .hero-card {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgba(0, 155, 58, 0.18);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(0, 155, 58, 0.16);
   border-radius: var(--r-lg);
-  padding: 28px 26px;
+  padding: 26px 24px;
   color: var(--text);
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  box-shadow: 0 12px 40px rgba(0, 107, 46, 0.1), 0 2px 8px rgba(0, 107, 46, 0.06);
-  animation: heroCardIn 1s 0.32s var(--ease) both;
+  gap: 16px;
+  box-shadow:
+    0 4px 16px rgba(18, 51, 34, 0.06),
+    0 16px 48px rgba(18, 51, 34, 0.08);
+  animation: heroCardIn 0.9s 0.35s var(--ease) both;
 }
 
 .hero-card-eyebrow {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--green);
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
 }
 
 .hero-card-stats {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .hero-card-stats li {
   display: flex;
   align-items: baseline;
-  gap: 14px;
+  gap: 12px;
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(0, 155, 58, 0.12);
+  border-bottom: 1px solid rgba(0, 155, 58, 0.1);
 }
 
 .hero-card-stats li:last-child { border-bottom: none; padding-bottom: 0; }
@@ -739,45 +737,46 @@ strong { font-weight: 600; color: var(--text); }
 .hero-card-stats strong {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   line-height: 1;
   color: var(--green-dark);
   letter-spacing: -0.02em;
   flex-shrink: 0;
-  min-width: 70px;
+  min-width: 64px;
 }
 
 .hero-card-stats span {
-  font-size: 0.86rem;
-  color: rgba(18, 51, 34, 0.75);
+  font-size: 0.84rem;
+  color: var(--muted);
   line-height: 1.4;
 }
 
 .hero-card-foot {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   color: rgba(18, 51, 34, 0.45);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   margin: 0;
 }
 
+/* SCROLL INDICATOR */
 .hero-scroll {
   position: absolute;
-  bottom: 24px;
+  bottom: 28px;
   left: var(--pad);
   z-index: 3;
   display: flex;
   align-items: center;
   gap: 14px;
-  color: rgba(18, 51, 34, 0.4);
-  font-size: 0.7rem;
+  color: rgba(18, 51, 34, 0.45);
+  font-size: 0.68rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .hero-scroll-line {
-  width: 60px;
+  width: 52px;
   height: 1px;
-  background: rgba(18, 51, 34, 0.18);
+  background: rgba(18, 51, 34, 0.15);
   position: relative;
   overflow: hidden;
 }
@@ -792,25 +791,25 @@ strong { font-weight: 600; color: var(--text); }
 }
 
 @keyframes scroll-line {
-  0%, 100% { transform: scaleX(0); transform-origin: left; }
-  50% { transform: scaleX(1); transform-origin: left; }
-  51% { transform-origin: right; }
+  0%   { transform: scaleX(0); transform-origin: left; }
+  50%  { transform: scaleX(1); transform-origin: left; }
+  51%  { transform-origin: right; }
   100% { transform: scaleX(0); transform-origin: right; }
 }
 
 @keyframes heroCopyIn {
-  from { opacity: 0; transform: translateY(28px); }
+  from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes heroCardIn {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes heroImgIn {
-  from { opacity: 0; transform: scale(1.06); }
-  to   { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: scale(1.04) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 /* =============== TRUST STRIP =============== */
@@ -2614,40 +2613,52 @@ strong { font-weight: 600; color: var(--text); }
   .brand-sub { font-size: 0.65rem; }
 
   .hero {
-    min-height: 600px;
+    min-height: 680px;
     background: var(--white);
   }
 
-  .hero-media {
-    left: 0;
-    top: 50%;
-    right: 0;
+  /* Mobile: foto visível atrás da área de texto */
+  .hero-image {
+    object-position: 55% center;
+    height: 100%;
   }
 
+  /* Fade topo→base: texto legível em cima, foto aparece abaixo */
   .hero-fade {
-    background: linear-gradient(
-      to bottom,
-      #FFFFFF 0%,
-      #FFFFFF 38%,
-      rgba(255, 255, 255, 0.88) 56%,
-      rgba(255, 255, 255, 0.5) 78%,
-      rgba(255, 255, 255, 0.12) 100%
-    );
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 1)    0%,
+        rgba(255, 255, 255, 0.97) 42%,
+        rgba(255, 255, 255, 0.82) 58%,
+        rgba(255, 255, 255, 0.48) 74%,
+        rgba(255, 255, 255, 0.1)  100%
+      ),
+      linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0.6) 0%,
+        rgba(255, 255, 255, 0) 60%
+      );
   }
 
   .hero-shell {
     grid-template-columns: 1fr;
-    gap: 32px;
-    padding-block: 60px 96px;
+    gap: 24px;
+    padding-block: 56px 80px;
     align-items: start;
   }
+
   .hero-card {
-    padding: 22px;
+    padding: 20px;
+    /* no mobile fica na parte inferior onde a foto aparece — mantém blur */
+    max-width: 380px;
   }
+
   .hero-card-stats strong {
-    font-size: 1.9rem;
-    min-width: 56px;
+    font-size: 1.8rem;
+    min-width: 52px;
   }
+
   .hero-actions { flex-direction: column; align-items: stretch; }
   .hero-actions .btn { width: 100%; }
   .hero-scroll { display: none; }
