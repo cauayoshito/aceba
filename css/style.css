@@ -591,34 +591,36 @@ strong { font-weight: 600; color: var(--text); }
 
 .hero-image {
   width: 100%;
-  height: 110%;   /* margem extra para o parallax */
+  height: 110%;
   object-fit: cover;
   object-position: 62% center;
   will-change: transform;
-  transform-origin: center top;
-  animation: heroImgIn 1.6s 0.1s var(--ease) both;
+  transform-origin: center center;
+  filter: brightness(1.06) saturate(0.88) contrast(0.97);
+  animation:
+    heroImgIn 1.6s 0.1s var(--ease) both,
+    heroImgFloat 18s 1.7s ease-in-out infinite;
 }
 
-/* Fade orgânico: cobre só a área do texto */
+/* Fade atmosférico: bloom elíptico da esquerda — sem linha de corte visível */
 .hero-fade {
   position: absolute;
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(
-      to right,
-      #FFFFFF 0%,
-      #FFFFFF 26%,
-      rgba(255, 255, 255, 0.97) 34%,
-      rgba(255, 255, 255, 0.85) 44%,
-      rgba(255, 255, 255, 0.5)  56%,
-      rgba(255, 255, 255, 0.12) 70%,
-      rgba(255, 255, 255, 0)    84%
+    radial-gradient(
+      ellipse 74% 115% at 13% 50%,
+      rgba(255, 255, 255, 1.00) 0%,
+      rgba(255, 255, 255, 0.97) 24%,
+      rgba(255, 255, 255, 0.84) 42%,
+      rgba(255, 255, 255, 0.52) 58%,
+      rgba(255, 255, 255, 0.16) 74%,
+      rgba(255, 255, 255, 0.00) 90%
     ),
     linear-gradient(
       to top,
-      rgba(255, 255, 255, 0.18) 0%,
-      transparent 18%
+      rgba(255, 255, 255, 0.14) 0%,
+      transparent 22%
     );
 }
 
@@ -810,6 +812,11 @@ strong { font-weight: 600; color: var(--text); }
 @keyframes heroImgIn {
   from { opacity: 0; transform: scale(1.04) translateY(-8px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes heroImgFloat {
+  0%, 100% { transform: scale(1.00) translateY(0px);  }
+  50%       { transform: scale(1.02) translateY(-7px); }
 }
 
 /* =============== TRUST STRIP =============== */
@@ -2623,21 +2630,21 @@ strong { font-weight: 600; color: var(--text); }
     height: 100%;
   }
 
-  /* Fade topo→base: texto legível em cima, foto aparece abaixo */
+  /* Mobile: bloom elíptico do topo — texto legível, foto emerge organicamente */
   .hero-fade {
     background:
-      linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 1)    0%,
-        rgba(255, 255, 255, 0.97) 42%,
-        rgba(255, 255, 255, 0.82) 58%,
-        rgba(255, 255, 255, 0.48) 74%,
-        rgba(255, 255, 255, 0.1)  100%
+      radial-gradient(
+        ellipse 130% 68% at 50% -4%,
+        rgba(255, 255, 255, 1.00) 0%,
+        rgba(255, 255, 255, 0.96) 32%,
+        rgba(255, 255, 255, 0.76) 52%,
+        rgba(255, 255, 255, 0.34) 70%,
+        rgba(255, 255, 255, 0.00) 88%
       ),
       linear-gradient(
         to right,
-        rgba(255, 255, 255, 0.6) 0%,
-        rgba(255, 255, 255, 0) 60%
+        rgba(255, 255, 255, 0.42) 0%,
+        rgba(255, 255, 255, 0.00) 52%
       );
   }
 

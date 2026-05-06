@@ -86,26 +86,6 @@
     });
   }
 
-  /* =============== HERO PARALLAX =============== */
-  const heroImg = document.querySelector(".hero-image");
-  const heroSection = document.querySelector(".hero");
-
-  if (heroImg && heroSection && !prefersReducedMotion) {
-    // aguarda animação CSS terminar (1.7s) antes de ligar o parallax JS
-    let parallaxReady = false;
-    setTimeout(() => { parallaxReady = true; }, 1800);
-
-    const onScroll = () => {
-      if (!parallaxReady) return;
-      const scrollY = window.scrollY;
-      const heroH = heroSection.offsetHeight;
-      if (scrollY < heroH) {
-        heroImg.style.transform = `translateY(${scrollY * 0.22}px)`;
-      }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-  }
-
   /* =============== REVEAL ON SCROLL =============== */
   const reveals = document.querySelectorAll(".reveal");
 
