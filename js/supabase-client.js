@@ -1,7 +1,7 @@
 /* ================================================================
    ACEBA: Supabase client
    - Apenas anon key (NUNCA service_role_key)
-   - Expõe window.supabaseClient + window.isSupabaseConfigured
+   - Expõe window.acebaSupabaseClient + window.isSupabaseConfigured
    ================================================================ */
 
 const SUPABASE_URL      = "https://cgvdzxklsjxudhpmripa.supabase.co";
@@ -35,5 +35,5 @@ if (URL_LOOKS_VALID && KEY_LOOKS_VALID) {
   }
 }
 
-window.supabaseClient      = supabase;
+window.acebaSupabaseClient = supabase;
 window.isSupabaseConfigured = Boolean(supabase);

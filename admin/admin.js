@@ -10,11 +10,14 @@
   /* ──────────────────────────────────────────────────────────────
      CONSTANTES + CONFIGURAÇÃO
   ─────────────────────────────────────────────────────────────── */
-  var ADMIN_LOGIN     = "login.html";
-  var ADMIN_DASHBOARD = "dashboard.html";
+  var ADMIN_LOGIN     = "./login.html";
+  var ADMIN_DASHBOARD = "./dashboard.html";
 
-  var supabase           = window.supabaseClient || null;
-  var isSupabaseReady    = Boolean(window.isSupabaseConfigured) && Boolean(supabase);
+  function getClient() {
+    return window.acebaSupabaseClient || null;
+  }
+
+  var isSupabaseReady = Boolean(window.isSupabaseConfigured) && Boolean(getClient());
 
   /* Ícones SVG para o dashboard */
   var ICO = {
@@ -177,27 +180,54 @@
   /* ──────────────────────────────────────────────────────────────
      SESSÃO
   ─────────────────────────────────────────────────────────────── */
-  async function getSession() {
-    if (!isSupabaseReady) return null;
-    var r = await supabase.auth.getSession();
-    return r && r.data ? r.data.session : null;
-  }
+  async function requireAuth() {
+    var client = getClient();
 
-  async function checkSession() {
-    var session = await getSession();
-    if (!session) { redirect(ADMIN_LOGIN); return null; }
-
-    var r = await supabase.from("admin_users").select("id,email").eq("id", session.user.id).maybeSingle();
-    if (r.error || !r.data) {
-      try { await supabase.auth.signOut(); } catch (_) {}
+    if (!client) {
+      console.error("Supabase não configurado");
       redirect(ADMIN_LOGIN);
       return null;
     }
+
+    var result = await client.auth.getSession();
+    var data = result ? result.data : null;
+    var error = result ? result.error : null;
+
+    console.log("SESSION CHECK:", data ? data.session : null, error);
+
+    if (error) {
+      console.error(error);
+      return null;
+    }
+
+    if (!data || !data.session) {
+      redirect(ADMIN_LOGIN);
+      return null;
+    }
+
+    var session = data.session;
+    var adminCheck = await client.from("admin_users").select("id,email").eq("id", session.user.id).maybeSingle();
+    if (adminCheck.error || !adminCheck.data) {
+      try { await client.auth.signOut(); } catch (_) {}
+      redirect(ADMIN_LOGIN);
+      return null;
+    }
+
     return session;
   }
 
+  async function getSession() {
+    var client = getClient();
+    if (!client) return null;
+    var result = await client.auth.getSession();
+    return result && result.data ? result.data.session : null;
+  }
+
   async function handleLogout() {
-    try { await supabase.auth.signOut(); } catch (_) {}
+    var client = getClient();
+    if (client) {
+      try { await client.auth.signOut(); } catch (_) {}
+    }
     redirect(ADMIN_LOGIN);
   }
 
@@ -222,11 +252,18 @@
       var email    = form.elements.email.value.trim();
       var password = form.elements.password.value;
 
-      var r = await supabase.auth.signInWithPassword({ email: email, password: password });
+      var client = getClient();
+      if (!client) {
+        setLoginStatus("Supabase não configurado.", "error");
+        return;
+      }
+
+      var r = await client.auth.signInWithPassword({ email: email, password: password });
       if (r.error) {
         setLoginStatus("E-mail ou senha incorretos. Verifique seus dados.", "error");
         return;
       }
+      await new Promise(function (resolve) { setTimeout(resolve, 300); });
       redirect(ADMIN_DASHBOARD);
     });
   }
@@ -238,7 +275,7 @@
     if (!isSupabaseReady) return;
     var tables = ["partners", "news", "gallery_images"];
     await Promise.all(tables.map(async function (t) {
-      var r = await supabase.from(t).select("id", { count: "exact", head: true });
+      var r = await getClient().from(t).select("id", { count: "exact", head: true });
       if (!r.error) state.counts[t] = r.count || 0;
     }));
     renderCounts();
@@ -356,7 +393,7 @@
 
     content.innerHTML = '<div class="admin-loading">Carregando ' + esc(config.title.toLowerCase()) + '…</div>';
 
-    var query = supabase.from(config.table).select("*");
+    var query = getClient().from(config.table).select("*");
     if (config.orderBy) {
       query = query.order(config.orderBy.column, { ascending: config.orderBy.ascending });
     }
@@ -531,7 +568,7 @@
     var content = $("#adminContent");
     var config  = MODULES.site_settings;
 
-    var resp = await supabase.from("site_settings").select("*");
+    var resp = await getClient().from("site_settings").select("*");
     if (resp.error) {
       content.innerHTML =
         '<div class="admin-empty"><div class="admin-empty-icon">!</div>' +
@@ -577,7 +614,7 @@
       return { key: f.key, value: val };
     });
 
-    var resp = await supabase.from("site_settings").upsert(rows, { onConflict: "key" });
+    var resp = await getClient().from("site_settings").upsert(rows, { onConflict: "key" });
     if (resp.error) { toast("Erro ao salvar: " + resp.error.message, "error"); return; }
     toast("Configurações salvas com sucesso", "success");
   }
@@ -726,7 +763,7 @@
       var safe = ["jpg","jpeg","png","webp","gif","svg"].includes(ext) ? ext : "jpg";
       var path = Date.now() + "-" + Math.random().toString(36).slice(2, 10) + "." + safe;
 
-      var resp = await supabase.storage.from(bucket).upload(path, file, {
+      var resp = await getClient().storage.from(bucket).upload(path, file, {
         cacheControl: "3600",
         upsert: false,
         contentType: file.type || "image/jpeg",
@@ -734,7 +771,7 @@
 
       if (resp.error) { toast("Erro no upload: " + resp.error.message, "error"); return; }
 
-      var urlResp   = supabase.storage.from(bucket).getPublicUrl(path);
+      var urlResp   = getClient().storage.from(bucket).getPublicUrl(path);
       var publicUrl = urlResp.data.publicUrl;
 
       if (urlInput) urlInput.value = publicUrl;
@@ -820,9 +857,9 @@
 
     var resp;
     if (state.modal.editingId) {
-      resp = await supabase.from(config.table).update(payload).eq("id", state.modal.editingId);
+      resp = await getClient().from(config.table).update(payload).eq("id", state.modal.editingId);
     } else {
-      resp = await supabase.from(config.table).insert(payload);
+      resp = await getClient().from(config.table).insert(payload);
     }
 
     if (submit) { submit.textContent = "Salvar"; submit.disabled = false; }
@@ -836,7 +873,7 @@
   }
 
   async function deleteRecord(table, id) {
-    var resp = await supabase.from(table).delete().eq("id", id);
+    var resp = await getClient().from(table).delete().eq("id", id);
     if (resp.error) { toast("Erro ao excluir: " + resp.error.message, "error"); return; }
     toast("Registro excluído", "success");
     await loadModule(state.activeSection);
@@ -875,7 +912,7 @@
       return;
     }
 
-    var session = await checkSession();
+    var session = await requireAuth();
     if (!session) return;
 
     var emailEl = $("#sessionEmail");
@@ -903,14 +940,16 @@
 
     /* first render */
     await refreshCounts();
-    await switchSection("dashboard");
+    loadDashboard();
   }
 
   /* ──────────────────────────────────────────────────────────────
      API PÚBLICA
   ─────────────────────────────────────────────────────────────── */
   window.acebaAdmin = {
-    checkSession:  checkSession,
+    checkSession:  requireAuth,
+    requireAuth:   requireAuth,
+    getClient:     getClient,
     handleLogout:  handleLogout,
     switchSection: switchSection,
     loadDashboard: loadDashboard,
