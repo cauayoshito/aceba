@@ -13,7 +13,7 @@
   var ADMIN_LOGIN     = "login.html";
   var ADMIN_DASHBOARD = "dashboard.html";
 
-  var supabase           = window.supabaseClient || null;
+  var supabase           = window.acebaSupabaseClient || null;
   var isSupabaseReady    = Boolean(window.isSupabaseConfigured) && Boolean(supabase);
 
   /* Ícones SVG para o dashboard */
