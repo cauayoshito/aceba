@@ -215,10 +215,28 @@
     }
 
     var session = data.session;
-    var r = await client.from("admin_users").select("id,email").eq("id", session.user.id).maybeSingle();
-    if (r.error || !r.data) {
-      try { await client.auth.signOut(); } catch (_) {}
-      window.location.href = ADMIN_LOGIN;
+    var adminCheck = await client.from("admin_users").select("id,email").eq("id", session.user.id).maybeSingle();
+
+    console.log("ADMIN CHECK:", {
+      userId: session.user.id,
+      email: session.user.email,
+      admin: adminCheck.data,
+      error: adminCheck.error
+    });
+
+    if (adminCheck.error || !adminCheck.data) {
+      var content = document.querySelector("#adminContent");
+      if (content) {
+        content.innerHTML =
+          '<div class="admin-empty">' +
+            '<div class="admin-empty-icon">!</div>' +
+            '<h3>Usuário sem permissão administrativa</h3>' +
+            '<p>Usuário autenticado, mas ainda não autorizado como administrador. Cadastre este usuário na tabela admin_users.</p>' +
+            '<p><strong>E-mail:</strong> ' + esc(session.user.email || "") + '</p>' +
+            '<p><strong>ID:</strong> ' + esc(session.user.id || "") + '</p>' +
+          '</div>';
+      }
+
       return null;
     }
 

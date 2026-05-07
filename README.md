@@ -72,6 +72,19 @@ const SUPABASE_ANON_KEY = "sua-anon-key";
 
 Não coloque `service_role_key` no frontend.
 
+
+### Autorizar usuário no painel admin
+
+Após criar o usuário no Supabase Auth, rode no SQL Editor:
+
+```sql
+insert into public.admin_users (id, email)
+select id, email
+from auth.users
+where email = 'EMAIL_DO_ADMIN_AQUI'
+on conflict (id) do update set email = excluded.email;
+```
+
 ## Acessar o painel
 
 Depois de configurar o Supabase:
