@@ -176,6 +176,45 @@ create index if not exists projects_active_created_idx on public.projects (is_ac
 create index if not exists gallery_active_created_idx on public.gallery_images (is_active, created_at desc);
 create index if not exists transparency_active_created_idx on public.transparency_documents (is_active, created_at desc);
 
+-- ================================================================
+-- Schema v2: tabela news + campo description em partners
+-- Executar no SQL Editor do Supabase para adicionar ao projeto existente.
+-- ================================================================
+
+alter table public.partners add column if not exists description text;
+
+create table if not exists public.news (
+  id           uuid    primary key default gen_random_uuid(),
+  title        text    not null,
+  category     text,
+  cover_url    text,
+  excerpt      text,
+  content      text,
+  published_at date    default current_date,
+  is_active    boolean default true,
+  created_at   timestamp default now()
+);
+
+alter table public.news enable row level security;
+
+drop policy if exists "Public can read active news" on public.news;
+create policy "Public can read active news"
+on public.news
+for select
+to anon, authenticated
+using (is_active = true or public.is_admin());
+
+drop policy if exists "Admins can manage news" on public.news;
+create policy "Admins can manage news"
+on public.news
+for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+create index if not exists news_active_published_idx
+  on public.news (is_active, published_at desc);
+
 insert into storage.buckets (id, name, public)
 values
   ('logos', 'logos', true),

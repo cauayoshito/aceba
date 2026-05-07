@@ -1,159 +1,132 @@
 /* ================================================================
-   ACEBA Admin: painel administrativo
-   - Sem import/export, sem type=module
-   - Usa window.supabaseClient (apenas anon key)
-   - CRUD real: partners / projects / gallery_images /
-     transparency_documents / site_settings
+   ACEBA Admin v3 — Painel Institucional
+   Módulos: Parcerias · Notícias · Galeria · Configurações
+   Upload real p/ Supabase Storage · CRUD completo
    ================================================================ */
 
 (function () {
   "use strict";
 
-  /* --------------- CONSTANTES + STATE --------------- */
-  var ADMIN_LOGIN = "login.html";
+  /* ──────────────────────────────────────────────────────────────
+     CONSTANTES + CONFIGURAÇÃO
+  ─────────────────────────────────────────────────────────────── */
+  var ADMIN_LOGIN     = "login.html";
   var ADMIN_DASHBOARD = "dashboard.html";
 
-  var supabase = window.supabaseClient || null;
-  var isSupabaseConfigured = Boolean(window.isSupabaseConfigured) && Boolean(supabase);
+  var supabase           = window.supabaseClient || null;
+  var isSupabaseReady    = Boolean(window.isSupabaseConfigured) && Boolean(supabase);
 
+  /* Ícones SVG para o dashboard */
+  var ICO = {
+    partners: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    news:     '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+    gallery:  '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+  };
+
+  /* ──────────────────────────────────────────────────────────────
+     MÓDULOS
+  ─────────────────────────────────────────────────────────────── */
   var MODULES = {
+
     partners: {
-      title: "Parceiros",
-      subtitle: "Empresas, instituições e apoiadores que caminham junto com a ACEBA.",
-      table: "partners",
-      newLabel: "+ Novo parceiro",
-      orderBy: { column: "sort_order", ascending: true },
+      title:    "Parcerias",
+      subtitle: "Empresas, instituições e apoiadores que caminham com a ACEBA.",
+      table:    "partners",
+      newLabel: "+ Adicionar parceria",
+      orderBy:  { column: "sort_order", ascending: true },
+      layout:   "partners",
       hasActive: true,
-      thumbField: "logo_url",
       titleField: "name",
-      summary: function (row) {
-        var bits = [];
-        if (row.website_url) bits.push(row.website_url);
-        if (typeof row.sort_order === "number") bits.push("ordem " + row.sort_order);
-        return bits.join("  •  ");
-      },
+      summary: function (r) { return r.description || r.website_url || ""; },
       fields: [
-        { name: "name", label: "Nome do parceiro", type: "text", required: true, placeholder: "Ex.: Prefeitura de Camaçari" },
-        { name: "logo_url", label: "URL do logo", type: "url", placeholder: "https://..." },
-        { name: "website_url", label: "Site (URL)", type: "url", placeholder: "https://..." },
-        { name: "sort_order", label: "Ordem de exibição", type: "number", default: 0 },
-        { name: "is_active", label: "Ativo no site", type: "checkbox", default: true },
+        { name: "name",        label: "Nome do parceiro",    type: "text",     required: true, placeholder: "Ex.: Prefeitura de Camaçari" },
+        { name: "description", label: "Descrição",           type: "textarea", rows: 2,        placeholder: "Breve descrição da parceria..." },
+        { name: "logo_url",    label: "Logo",                type: "upload",   bucket: "logos",  accept: "image/*", placeholder: "https://..." },
+        { name: "website_url", label: "Site (URL)",          type: "url",      placeholder: "https://..." },
+        { name: "sort_order",  label: "Ordem de exibição",   type: "number",   default: 0 },
+        { name: "is_active",   label: "Ativo no site",       type: "checkbox", default: true },
       ],
     },
-    projects: {
-      title: "Projetos",
-      subtitle: "Iniciativas e programas em andamento.",
-      table: "projects",
-      newLabel: "+ Novo projeto",
-      orderBy: { column: "created_at", ascending: false },
+
+    news: {
+      title:    "Notícias",
+      subtitle: "Publicações e atualizações do Instituto.",
+      table:    "news",
+      newLabel: "+ Nova notícia",
+      orderBy:  { column: "published_at", ascending: false },
+      layout:   "news",
       hasActive: true,
-      thumbField: "image_url",
       titleField: "title",
-      summary: function (row) {
-        return row.description || "";
-      },
+      summary: function (r) { return r.excerpt || ""; },
       fields: [
-        { name: "title", label: "Título do projeto", type: "text", required: true },
-        { name: "description", label: "Descrição", type: "textarea", required: true, rows: 4 },
-        { name: "image_url", label: "Imagem (URL)", type: "url", placeholder: "https://..." },
-        { name: "is_active", label: "Ativo no site", type: "checkbox", default: true },
+        { name: "title",        label: "Título",             type: "text",     required: true },
+        { name: "category",     label: "Categoria",          type: "text",     placeholder: "Ex.: EDUCAÇÃO, ESPORTE, PARCERIA" },
+        { name: "cover_url",    label: "Imagem de capa",     type: "upload",   bucket: "gallery", accept: "image/*", placeholder: "https://..." },
+        { name: "excerpt",      label: "Resumo",             type: "textarea", rows: 3,  placeholder: "Breve descrição para listagem..." },
+        { name: "content",      label: "Conteúdo completo",  type: "textarea", rows: 9 },
+        { name: "published_at", label: "Data de publicação", type: "date",     defaultToday: true },
+        { name: "is_active",    label: "Publicar no site",   type: "checkbox", default: true },
       ],
     },
+
     gallery_images: {
-      title: "Galeria",
+      title:    "Galeria",
       subtitle: "Fotos e registros de atividades.",
-      table: "gallery_images",
-      newLabel: "+ Nova imagem",
-      orderBy: { column: "created_at", ascending: false },
+      table:    "gallery_images",
+      newLabel: "+ Adicionar imagem",
+      orderBy:  { column: "created_at", ascending: false },
+      layout:   "gallery",
       hasActive: true,
-      thumbField: "image_url",
       titleField: "title",
-      summary: function (row) {
-        return row.category ? "Categoria: " + row.category : "Sem categoria";
-      },
+      summary: function (r) { return r.category ? "Categoria: " + r.category : ""; },
       fields: [
-        { name: "title", label: "Título da imagem", type: "text" },
-        { name: "category", label: "Categoria", type: "text", placeholder: "Ex.: educação, eventos, capoeira" },
-        { name: "image_url", label: "URL da imagem", type: "url", required: true, placeholder: "https://..." },
+        { name: "image_url", label: "Imagem",     type: "upload",   bucket: "gallery", required: true, accept: "image/*", placeholder: "https://..." },
+        { name: "title",     label: "Título",     type: "text",     placeholder: "Breve descrição..." },
+        { name: "category",  label: "Categoria",  type: "text",     placeholder: "Ex.: educação, eventos, capoeira" },
         { name: "is_active", label: "Ativa no site", type: "checkbox", default: true },
       ],
     },
-    transparency_documents: {
-      title: "Transparência",
-      subtitle: "Relatórios, prestações de contas e documentos públicos.",
-      table: "transparency_documents",
-      newLabel: "+ Novo documento",
-      orderBy: { column: "created_at", ascending: false },
-      hasActive: true,
-      thumbField: null,
-      titleField: "title",
-      summary: function (row) {
-        return row.description || row.file_url || "";
-      },
-      fields: [
-        { name: "title", label: "Título do documento", type: "text", required: true },
-        { name: "description", label: "Descrição", type: "textarea", rows: 3 },
-        { name: "file_url", label: "URL do arquivo (PDF, etc.)", type: "url", required: true, placeholder: "https://..." },
-        { name: "is_active", label: "Visível no site", type: "checkbox", default: true },
-      ],
-    },
+
     site_settings: {
-      title: "Configurações",
-      subtitle: "Dados de contato e informações institucionais usados em todo o site.",
-      table: "site_settings",
+      title:      "Configurações",
+      subtitle:   "Dados de contato e informações institucionais exibidos no site.",
+      table:      "site_settings",
       isSettings: true,
       settings: [
-        { key: "phone", label: "Telefone", type: "text", placeholder: "(71) 99999-9999" },
-        { key: "whatsapp", label: "WhatsApp (apenas números, com DDI)", type: "text", placeholder: "5571999999999" },
-        { key: "email", label: "E-mail institucional", type: "email", placeholder: "contato@aceba.org.br" },
-        { key: "instagram", label: "Instagram (URL)", type: "url", placeholder: "https://instagram.com/aceba" },
-        { key: "facebook", label: "Facebook (URL)", type: "url", placeholder: "https://facebook.com/aceba" },
-        { key: "pix_key", label: "Chave Pix", type: "text", placeholder: "CNPJ, e-mail, etc." },
-        { key: "address", label: "Endereço completo", type: "textarea", rows: 3 },
+        { key: "whatsapp",  label: "WhatsApp (números com DDI)", type: "text",     placeholder: "5571999999999" },
+        { key: "phone",     label: "Telefone",                   type: "text",     placeholder: "(71) 99999-9999" },
+        { key: "email",     label: "E-mail institucional",       type: "email",    placeholder: "contato@aceba.org.br" },
+        { key: "address",   label: "Endereço completo",          type: "textarea", rows: 3 },
+        { key: "pix_key",   label: "Chave Pix / CNPJ",          type: "text",     placeholder: "05.133.450/0001-76" },
+        { key: "instagram", label: "Instagram (URL)",            type: "url",      placeholder: "https://instagram.com/aceba" },
+        { key: "facebook",  label: "Facebook (URL)",             type: "url",      placeholder: "https://facebook.com/aceba" },
       ],
     },
   };
 
-  var SECTION_ORDER = [
-    "dashboard",
-    "partners",
-    "projects",
-    "gallery_images",
-    "transparency_documents",
-    "site_settings",
-  ];
+  var SECTION_ORDER = ["dashboard", "partners", "news", "gallery_images", "site_settings"];
 
+  /* ──────────────────────────────────────────────────────────────
+     ESTADO
+  ─────────────────────────────────────────────────────────────── */
   var state = {
     activeSection: "dashboard",
-    rows: [],
-    counts: {
-      partners: 0,
-      projects: 0,
-      gallery_images: 0,
-      transparency_documents: 0,
-    },
-    modal: {
-      isOpen: false,
-      type: null,
-      editingId: null,
-    },
+    rows:  [],
+    counts: { partners: 0, news: 0, gallery_images: 0 },
+    modal: { isOpen: false, type: null, editingId: null },
   };
 
-  /* --------------- HELPERS BÁSICOS --------------- */
+  /* ──────────────────────────────────────────────────────────────
+     HELPERS
+  ─────────────────────────────────────────────────────────────── */
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
   var $$ = function (sel, root) {
     return Array.prototype.slice.call((root || document).querySelectorAll(sel));
   };
 
-  function isLoginPage() {
-    return /login\.html$/i.test(window.location.pathname);
-  }
-
-  function isDashboardPage() {
-    return /dashboard\.html$/i.test(window.location.pathname);
-  }
-
-  function redirect(path) { window.location.href = path; }
+  function isLoginPage()     { return /login\.html$/i.test(window.location.pathname); }
+  function isDashboardPage() { return /dashboard\.html$/i.test(window.location.pathname); }
+  function redirect(path)    { window.location.href = path; }
 
   function esc(value) {
     return String(value == null ? "" : value)
@@ -164,108 +137,110 @@
       .replace(/'/g, "&#039;");
   }
 
-  function setLoginStatus(message, type) {
-    var status = $("#loginStatus");
-    if (!status) return;
-    status.textContent = message || "";
-    status.className = "admin-status" + (type ? " is-" + type : "");
+  function today() {
+    return new Date().toISOString().slice(0, 10);
   }
 
-  /* --------------- TOAST --------------- */
+  function formatDate(val) {
+    if (!val) return "";
+    try {
+      var d = new Date(val + "T12:00:00");
+      return new Intl.DateTimeFormat("pt-BR", {
+        day: "numeric", month: "short", year: "numeric"
+      }).format(d);
+    } catch (e) { return val; }
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     LOGIN STATUS
+  ─────────────────────────────────────────────────────────────── */
+  function setLoginStatus(msg, type) {
+    var el = $("#loginStatus");
+    if (!el) return;
+    el.textContent = msg || "";
+    el.className = "admin-status" + (type ? " is-" + type : "");
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     TOAST
+  ─────────────────────────────────────────────────────────────── */
   var toastTimer = null;
-  function toast(message, type) {
+  function toast(msg, type) {
     var el = $("#adminToast");
     if (!el) return;
-    el.textContent = message;
+    el.textContent = msg;
     el.className = "admin-toast is-visible" + (type ? " is-" + type : "");
-    if (toastTimer) window.clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(function () {
-      el.classList.remove("is-visible");
-    }, 3200);
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove("is-visible"); }, 3400);
   }
 
-  /* --------------- SESSÃO --------------- */
+  /* ──────────────────────────────────────────────────────────────
+     SESSÃO
+  ─────────────────────────────────────────────────────────────── */
   async function getSession() {
-    if (!isSupabaseConfigured) return null;
-    var resp = await supabase.auth.getSession();
-    return resp && resp.data ? resp.data.session : null;
+    if (!isSupabaseReady) return null;
+    var r = await supabase.auth.getSession();
+    return r && r.data ? r.data.session : null;
   }
 
   async function checkSession() {
     var session = await getSession();
-    if (!session) {
+    if (!session) { redirect(ADMIN_LOGIN); return null; }
+
+    var r = await supabase.from("admin_users").select("id,email").eq("id", session.user.id).maybeSingle();
+    if (r.error || !r.data) {
+      try { await supabase.auth.signOut(); } catch (_) {}
       redirect(ADMIN_LOGIN);
       return null;
     }
-
-    var resp = await supabase
-      .from("admin_users")
-      .select("id,email")
-      .eq("id", session.user.id)
-      .maybeSingle();
-
-    if (resp.error || !resp.data) {
-      try { await supabase.auth.signOut(); } catch (e) {}
-      redirect(ADMIN_LOGIN);
-      return null;
-    }
-
     return session;
   }
 
   async function handleLogout() {
-    try { await supabase.auth.signOut(); } catch (e) {}
+    try { await supabase.auth.signOut(); } catch (_) {}
     redirect(ADMIN_LOGIN);
   }
 
-  /* --------------- LOGIN --------------- */
+  /* ──────────────────────────────────────────────────────────────
+     LOGIN INIT
+  ─────────────────────────────────────────────────────────────── */
   async function initLogin() {
     var form = $("#loginForm");
     if (!form) return;
 
-    if (!isSupabaseConfigured) {
-      setLoginStatus(
-        "Configure SUPABASE_URL e SUPABASE_ANON_KEY em js/supabase-client.js.",
-        "error"
-      );
+    if (!isSupabaseReady) {
+      setLoginStatus("Configure SUPABASE_URL e SUPABASE_ANON_KEY em js/supabase-client.js.", "error");
       return;
     }
 
     var session = await getSession();
-    if (session) {
-      redirect(ADMIN_DASHBOARD);
-      return;
-    }
+    if (session) { redirect(ADMIN_DASHBOARD); return; }
 
-    form.addEventListener("submit", async function (event) {
-      event.preventDefault();
-      setLoginStatus("Entrando...");
-      var email = form.elements.email.value.trim();
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      setLoginStatus("Entrando…");
+      var email    = form.elements.email.value.trim();
       var password = form.elements.password.value;
 
-      var resp = await supabase.auth.signInWithPassword({ email: email, password: password });
-      if (resp.error) {
-        setLoginStatus("Não foi possível entrar. Confira e-mail, senha e autorização.", "error");
+      var r = await supabase.auth.signInWithPassword({ email: email, password: password });
+      if (r.error) {
+        setLoginStatus("E-mail ou senha incorretos. Verifique seus dados.", "error");
         return;
       }
       redirect(ADMIN_DASHBOARD);
     });
   }
 
-  /* --------------- COUNTERS --------------- */
+  /* ──────────────────────────────────────────────────────────────
+     CONTADORES
+  ─────────────────────────────────────────────────────────────── */
   async function refreshCounts() {
-    if (!isSupabaseConfigured) return;
-    var tables = ["partners", "projects", "gallery_images", "transparency_documents"];
-    await Promise.all(
-      tables.map(async function (table) {
-        var resp = await supabase
-          .from(table)
-          .select("id", { count: "exact", head: true });
-        if (!resp.error) {
-          state.counts[table] = resp.count || 0;
-        }
-      })
-    );
+    if (!isSupabaseReady) return;
+    var tables = ["partners", "news", "gallery_images"];
+    await Promise.all(tables.map(async function (t) {
+      var r = await supabase.from(t).select("id", { count: "exact", head: true });
+      if (!r.error) state.counts[t] = r.count || 0;
+    }));
     renderCounts();
   }
 
@@ -276,89 +251,101 @@
     });
   }
 
-  /* --------------- DASHBOARD INICIAL --------------- */
+  /* ──────────────────────────────────────────────────────────────
+     DASHBOARD
+  ─────────────────────────────────────────────────────────────── */
   function loadDashboard() {
     var content = $("#adminContent");
     if (!content) return;
 
-    $("#sectionTitle").textContent = "Início";
-    $("#sectionSubtitle").textContent = "Resumo geral do conteúdo do site.";
+    $("#sectionTitle").textContent    = "Início";
+    $("#sectionSubtitle").textContent = "Visão geral do painel administrativo da ACEBA.";
     $("#primaryActionButton").classList.add("is-hidden");
 
     var c = state.counts;
+
     content.innerHTML =
-      '<div class="admin-dashboard">' +
-        '<div class="admin-summary-grid">' +
-          summaryCard("Parceiros", c.partners, "partners") +
-          summaryCard("Projetos", c.projects, "projects") +
-          summaryCard("Galeria", c.gallery_images, "gallery_images") +
-          summaryCard("Documentos", c.transparency_documents, "transparency_documents") +
+      '<div class="dash-grid">' +
+
+        /* Welcome */
+        '<div class="dash-welcome">' +
+          '<h2>Bem-vindo ao painel</h2>' +
+          '<p>Aqui você gerencia parcerias, notícias e galeria do site da ACEBA.</p>' +
         '</div>' +
 
-        '<section class="admin-quick-actions">' +
-          '<h2>Ações rápidas</h2>' +
-          '<div class="admin-quick-grid">' +
-            quickButton("Cadastrar parceiro", "Adicionar uma nova organização parceira", "partners") +
-            quickButton("Publicar projeto", "Criar um novo projeto institucional", "projects") +
-            quickButton("Subir foto", "Adicionar imagem à galeria", "gallery_images") +
-            quickButton("Publicar documento", "Adicionar documento de transparência", "transparency_documents") +
-            quickButton("Editar contato", "Atualizar telefone, e-mail e redes", "site_settings", true) +
+        /* Stat cards */
+        '<div class="dash-stats">' +
+          statCard("Parcerias",          c.partners,       ICO.partners, "partners",       "green") +
+          statCard("Notícias publicadas", c.news,           ICO.news,     "news",           "blue") +
+          statCard("Imagens na galeria",  c.gallery_images, ICO.gallery,  "gallery_images", "orange") +
+        '</div>' +
+
+        /* Quick actions */
+        '<section class="dash-actions">' +
+          '<h3 class="dash-actions-title">Ações rápidas</h3>' +
+          '<div class="dash-actions-grid">' +
+            quickAction("Nova parceria",    "Adicionar parceiro ao site", "partners",       "green") +
+            quickAction("Nova notícia",     "Publicar atualização",       "news",           "blue") +
+            quickAction("Adicionar imagem", "Nova foto na galeria",       "gallery_images", "orange") +
           '</div>' +
         '</section>' +
+
       '</div>';
 
-    $$('.admin-summary-card.is-clickable', content).forEach(function (card) {
-      card.addEventListener("click", function () {
-        switchSection(card.getAttribute("data-target"));
-      });
+    /* bind stat cards */
+    $$(".stat-card[data-target]", content).forEach(function (el) {
+      el.addEventListener("click", function () { switchSection(el.getAttribute("data-target")); });
     });
 
-    $$('.admin-quick-button', content).forEach(function (btn) {
+    /* bind quick actions */
+    $$(".dash-action-btn", content).forEach(function (btn) {
       btn.addEventListener("click", function () {
         var target = btn.getAttribute("data-target");
-        var openCreate = btn.getAttribute("data-create") === "true";
         switchSection(target).then(function () {
-          if (openCreate && target !== "site_settings") {
-            openModal(target, null);
-          }
+          if (target !== "site_settings") openModal(target, null);
         });
       });
     });
   }
 
-  function summaryCard(label, value, target) {
+  function statCard(label, value, icon, target, color) {
     return (
-      '<button type="button" class="admin-summary-card is-clickable" data-target="' + esc(target) + '">' +
-        '<p class="label">' + esc(label) + '</p>' +
-        '<p class="value">' + esc(value) + '</p>' +
-        '<p class="delta">Ver e gerenciar →</p>' +
+      '<div class="stat-card stat-card--' + color + '" data-target="' + esc(target) + '">' +
+        '<div class="stat-icon stat-icon--' + color + '">' + icon + '</div>' +
+        '<div>' +
+          '<p class="stat-value">' + esc(String(value)) + '</p>' +
+          '<p class="stat-label">' + esc(label) + '</p>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function quickAction(title, sub, target, color) {
+    return (
+      '<button type="button" class="dash-action-btn" data-target="' + esc(target) + '">' +
+        '<span class="action-plus action-plus--' + color + '">+</span>' +
+        '<span class="action-title">' + esc(title) + '</span>' +
+        '<span class="action-sub">' + esc(sub) + '</span>' +
       '</button>'
     );
   }
 
-  function quickButton(title, sub, target, isSettings) {
-    return (
-      '<button type="button" class="admin-quick-button" data-target="' + esc(target) + '" data-create="' + (isSettings ? "false" : "true") + '">' +
-        '<span class="label">Ação</span>' +
-        '<span class="title" style="display:block;font-weight:700;font-size:0.98rem;">' + esc(title) + '</span>' +
-        '<span class="sub" style="display:block;color:var(--a-muted);font-size:0.84rem;margin-top:4px;">' + esc(sub) + '</span>' +
-      '</button>'
-    );
-  }
-
-  /* --------------- LISTAGEM POR MÓDULO --------------- */
+  /* ──────────────────────────────────────────────────────────────
+     CARREGAMENTO DE MÓDULOS
+  ─────────────────────────────────────────────────────────────── */
   async function loadModule(moduleKey) {
-    var config = MODULES[moduleKey];
+    var config  = MODULES[moduleKey];
     if (!config) return;
 
     var content = $("#adminContent");
-    $("#sectionTitle").textContent = config.title;
+    var newBtn  = $("#primaryActionButton");
+
+    $("#sectionTitle").textContent    = config.title;
     $("#sectionSubtitle").textContent = config.subtitle || "";
-    var newBtn = $("#primaryActionButton");
 
     if (config.isSettings) {
       newBtn.classList.add("is-hidden");
-      content.innerHTML = '<div class="admin-loading">Carregando configurações...</div>';
+      content.innerHTML = '<div class="admin-loading">Carregando configurações…</div>';
       await loadSettings();
       return;
     }
@@ -367,7 +354,7 @@
     newBtn.textContent = config.newLabel || "+ Novo";
     newBtn.onclick = function () { openModal(moduleKey, null); };
 
-    content.innerHTML = '<div class="admin-loading">Carregando ' + esc(config.title.toLowerCase()) + '...</div>';
+    content.innerHTML = '<div class="admin-loading">Carregando ' + esc(config.title.toLowerCase()) + '…</div>';
 
     var query = supabase.from(config.table).select("*");
     if (config.orderBy) {
@@ -378,16 +365,17 @@
     if (resp.error) {
       content.innerHTML =
         '<div class="admin-empty">' +
-          '<div class="admin-empty-icon">!</div>' +
+          '<div class="admin-empty-icon">' +
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+          '</div>' +
           '<h3>Erro ao carregar</h3>' +
-          '<p>' + esc(resp.error.message || "Não foi possível ler do Supabase. Verifique RLS e permissões.") + '</p>' +
+          '<p>' + esc(resp.error.message || "Não foi possível ler os dados. Verifique as permissões do Supabase.") + '</p>' +
         '</div>';
       return;
     }
 
     state.rows = resp.data || [];
 
-    // sincroniza contador da seção atual, se aplicável
     if (Object.prototype.hasOwnProperty.call(state.counts, moduleKey)) {
       state.counts[moduleKey] = state.rows.length;
       renderCounts();
@@ -396,97 +384,137 @@
     renderRecordsList(moduleKey);
   }
 
+  /* ──────────────────────────────────────────────────────────────
+     RENDERIZAÇÃO DE LISTAS
+  ─────────────────────────────────────────────────────────────── */
   function renderRecordsList(moduleKey) {
-    var config = MODULES[moduleKey];
+    var config  = MODULES[moduleKey];
     var content = $("#adminContent");
+    var layout  = config.layout || "default";
 
     if (!state.rows.length) {
       content.innerHTML =
-        '<div class="admin-list-shell">' +
-          '<div class="admin-list-head">' +
-            '<h2>' + esc(config.title) + '<span class="admin-list-count">0</span></h2>' +
+        '<div class="admin-empty">' +
+          '<div class="admin-empty-icon">' +
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
           '</div>' +
-          '<div class="admin-empty">' +
-            '<div class="admin-empty-icon">+</div>' +
-            '<h3>Nada por aqui ainda</h3>' +
-            '<p>Crie o primeiro registro de ' + esc(config.title.toLowerCase()) + ' para que apareça no site.</p>' +
-            '<button type="button" class="admin-button" id="emptyCreateBtn">' + esc(config.newLabel) + '</button>' +
-          '</div>' +
+          '<h3>Nada por aqui ainda</h3>' +
+          '<p>Crie o primeiro registro de ' + esc(config.title.toLowerCase()) + '.</p>' +
+          '<button type="button" class="admin-button" id="emptyCreateBtn">' + esc(config.newLabel) + '</button>' +
         '</div>';
       var emptyBtn = $("#emptyCreateBtn");
       if (emptyBtn) emptyBtn.addEventListener("click", function () { openModal(moduleKey, null); });
       return;
     }
 
-    var rowsHtml = state.rows.map(function (row) {
-      return renderRecordCard(moduleKey, row);
-    }).join("");
+    var gridClass = gridClassFor(layout);
+    var cardsHtml = state.rows.map(function (row) { return renderCard(layout, row); }).join("");
 
     content.innerHTML =
-      '<div class="admin-list-shell">' +
-        '<div class="admin-list-head">' +
-          '<h2>' + esc(config.title) + '<span class="admin-list-count">' + state.rows.length + '</span></h2>' +
-        '</div>' +
-        '<div class="admin-records-grid">' + rowsHtml + '</div>' +
+      '<div class="list-shell">' +
+        '<div class="' + gridClass + '">' + cardsHtml + '</div>' +
       '</div>';
 
     bindRecordEvents(moduleKey);
   }
 
-  function renderRecordCard(moduleKey, row) {
-    var config = MODULES[moduleKey];
-    var inactive = config.hasActive && row.is_active === false ? " is-inactive" : "";
-    var title = row[config.titleField] || row.title || row.name || "Sem título";
-    var summary = config.summary ? config.summary(row) : "";
+  function gridClassFor(layout) {
+    if (layout === "news")     return "records-grid--news";
+    if (layout === "gallery")  return "records-grid--gallery";
+    if (layout === "partners") return "records-grid--partners";
+    return "records-grid--partners";
+  }
 
-    var thumb = "";
-    if (config.thumbField && row[config.thumbField]) {
-      thumb = '<div class="record-thumb"><img src="' + esc(row[config.thumbField]) + '" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\'·\'"></div>';
-    } else {
-      var initial = (title || "·").trim().charAt(0).toUpperCase() || "·";
-      thumb = '<div class="record-thumb">' + esc(initial) + '</div>';
-    }
+  /* ──────────────────────────────────────────────────────────────
+     CARDS POR LAYOUT
+  ─────────────────────────────────────────────────────────────── */
+  function renderCard(layout, row) {
+    if (layout === "partners") return renderPartnerCard(row);
+    if (layout === "news")     return renderNewsCard(row);
+    if (layout === "gallery")  return renderGalleryCard(row);
+    return renderPartnerCard(row);
+  }
 
-    var badge = "";
-    if (config.hasActive) {
-      badge = row.is_active === false
-        ? '<span class="record-badge is-inactive">Inativo</span>'
-        : '<span class="record-badge">Ativo</span>';
-    }
-
-    var toggleLabel = row.is_active === false ? "Ativar" : "Desativar";
-    var actionsHtml =
-      '<button type="button" class="record-action" data-action="edit" data-id="' + esc(row.id) + '">Editar</button>' +
-      (config.hasActive
-        ? '<button type="button" class="record-action" data-action="toggle" data-id="' + esc(row.id) + '">' + toggleLabel + '</button>'
-        : "") +
-      '<button type="button" class="record-action is-danger" data-action="delete" data-id="' + esc(row.id) + '">Excluir</button>';
+  function renderPartnerCard(row) {
+    var inactive = row.is_active === false ? " is-inactive" : "";
+    var logo = row.logo_url
+      ? '<img src="' + esc(row.logo_url) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+      : '<span class="logo-initial">' + esc((row.name || "P").trim().charAt(0).toUpperCase()) + '</span>';
 
     return (
-      '<article class="record-card' + inactive + '" data-id="' + esc(row.id) + '">' +
-        thumb +
-        '<div class="record-body">' +
-          '<p class="record-title">' + esc(title) + '</p>' +
-          (summary ? '<p class="record-meta">' + esc(summary) + '</p>' : '') +
-          badge +
+      '<article class="partner-card' + inactive + '" data-id="' + esc(row.id) + '">' +
+        '<div class="partner-logo-box">' + logo + '</div>' +
+        '<div class="partner-info">' +
+          '<p class="partner-name">' + esc(row.name || "Sem nome") + '</p>' +
+          (row.description ? '<p class="partner-desc">' + esc(row.description) + '</p>' : '') +
+          (typeof row.sort_order === "number" ? '<span class="partner-order">Ordem: ' + row.sort_order + '</span>' : '') +
         '</div>' +
-        '<div class="record-actions">' + actionsHtml + '</div>' +
+        '<div class="card-actions">' +
+          '<button type="button" class="record-action" data-action="edit"   data-id="' + esc(row.id) + '">Editar</button>' +
+          '<button type="button" class="record-action is-danger" data-action="delete" data-id="' + esc(row.id) + '">Excluir</button>' +
+        '</div>' +
       '</article>'
     );
   }
 
+  function renderNewsCard(row) {
+    var inactive = row.is_active === false ? " is-inactive" : "";
+    var cover = row.cover_url
+      ? '<img src="' + esc(row.cover_url) + '" alt="" loading="lazy">'
+      : '';
+    var badge = row.category
+      ? '<span class="news-badge">' + esc(row.category) + '</span>'
+      : '';
+
+    return (
+      '<article class="news-card' + inactive + '" data-id="' + esc(row.id) + '">' +
+        '<div class="news-cover">' + cover + badge + '</div>' +
+        '<div class="news-body">' +
+          '<h3 class="news-title">' + esc(row.title || "Sem título") + '</h3>' +
+          (row.excerpt ? '<p class="news-excerpt">' + esc(row.excerpt) + '</p>' : '') +
+          (row.published_at ? '<p class="news-date">' + esc(formatDate(row.published_at)) + '</p>' : '') +
+        '</div>' +
+        '<footer class="news-actions">' +
+          '<button type="button" class="record-action" data-action="edit"   data-id="' + esc(row.id) + '">Editar</button>' +
+          '<button type="button" class="record-action is-danger" data-action="delete" data-id="' + esc(row.id) + '">Excluir</button>' +
+        '</footer>' +
+      '</article>'
+    );
+  }
+
+  function renderGalleryCard(row) {
+    var inactive = row.is_active === false ? " is-inactive" : "";
+    var img = row.image_url
+      ? '<img src="' + esc(row.image_url) + '" alt="" loading="lazy">'
+      : '<div class="gallery-placeholder">🖼</div>';
+
+    return (
+      '<article class="gallery-card' + inactive + '" data-id="' + esc(row.id) + '">' +
+        '<div class="gallery-img">' + img + '</div>' +
+        '<div class="gallery-footer">' +
+          '<p class="gallery-caption">' + esc(row.title || "—") + '</p>' +
+          '<div class="gallery-actions">' +
+            '<button type="button" class="record-action small" data-action="edit"   data-id="' + esc(row.id) + '">Editar</button>' +
+            '<button type="button" class="record-action small is-danger" data-action="delete" data-id="' + esc(row.id) + '">Excluir</button>' +
+          '</div>' +
+        '</div>' +
+      '</article>'
+    );
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     BIND EVENTOS NOS CARDS
+  ─────────────────────────────────────────────────────────────── */
   function bindRecordEvents(moduleKey) {
-    $$('.record-action').forEach(function (btn) {
+    $$(".record-action").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var action = btn.getAttribute("data-action");
-        var id = btn.getAttribute("data-id");
-        var row = state.rows.find(function (r) { return String(r.id) === String(id); });
+        var id     = btn.getAttribute("data-id");
+        var row    = state.rows.find(function (r) { return String(r.id) === String(id); });
         if (!row) return;
 
         if (action === "edit") {
           openModal(moduleKey, row);
-        } else if (action === "toggle") {
-          toggleActive(MODULES[moduleKey].table, row.id, !!row.is_active);
         } else if (action === "delete") {
           if (window.confirm("Excluir este registro? Esta ação não pode ser desfeita.")) {
             deleteRecord(MODULES[moduleKey].table, row.id);
@@ -496,25 +524,18 @@
     });
   }
 
-  /* --------------- LOAD WRAPPERS (nomes pedidos) --------------- */
-  function loadPartners() { return loadModule("partners"); }
-  function loadProjects() { return loadModule("projects"); }
-  function loadGallery()  { return loadModule("gallery_images"); }
-  function loadDocuments() { return loadModule("transparency_documents"); }
-
-  /* --------------- SETTINGS --------------- */
+  /* ──────────────────────────────────────────────────────────────
+     CONFIGURAÇÕES
+  ─────────────────────────────────────────────────────────────── */
   async function loadSettings() {
     var content = $("#adminContent");
-    var config = MODULES.site_settings;
+    var config  = MODULES.site_settings;
 
     var resp = await supabase.from("site_settings").select("*");
     if (resp.error) {
       content.innerHTML =
-        '<div class="admin-empty">' +
-          '<div class="admin-empty-icon">!</div>' +
-          '<h3>Erro ao carregar configurações</h3>' +
-          '<p>' + esc(resp.error.message) + '</p>' +
-        '</div>';
+        '<div class="admin-empty"><div class="admin-empty-icon">!</div>' +
+        '<h3>Erro ao carregar</h3><p>' + esc(resp.error.message) + '</p></div>';
       return;
     }
 
@@ -535,84 +556,71 @@
     content.innerHTML =
       '<form class="admin-settings" id="settingsForm" novalidate>' +
         '<h2>Dados institucionais</h2>' +
-        '<p class="help">Esses valores são lidos pelo site público. Use exatamente como devem aparecer.</p>' +
+        '<p class="help">Esses valores são lidos pelo site público. Altere apenas com cuidado.</p>' +
         '<div class="admin-settings-grid">' + fieldsHtml + '</div>' +
         '<div class="admin-settings-actions">' +
           '<button type="submit" class="admin-button">Salvar configurações</button>' +
         '</div>' +
       '</form>';
 
-    $("#settingsForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      saveSettings();
-    });
+    $("#settingsForm").addEventListener("submit", function (e) { e.preventDefault(); saveSettings(); });
   }
 
   async function saveSettings() {
-    var form = $("#settingsForm");
-    if (!form) return;
+    var form   = $("#settingsForm");
     var config = MODULES.site_settings;
+    if (!form) return;
 
     var rows = config.settings.map(function (f) {
-      var el = form.elements[f.key];
+      var el  = form.elements[f.key];
       var val = el ? String(el.value || "").trim() : "";
       return { key: f.key, value: val };
     });
 
-    var resp = await supabase
-      .from("site_settings")
-      .upsert(rows, { onConflict: "key" });
-
-    if (resp.error) {
-      toast("Erro ao salvar: " + resp.error.message, "error");
-      return;
-    }
-
+    var resp = await supabase.from("site_settings").upsert(rows, { onConflict: "key" });
+    if (resp.error) { toast("Erro ao salvar: " + resp.error.message, "error"); return; }
     toast("Configurações salvas com sucesso", "success");
   }
 
-  /* --------------- MODAL CRUD --------------- */
+  /* ──────────────────────────────────────────────────────────────
+     MODAL CRUD
+  ─────────────────────────────────────────────────────────────── */
   function openModal(type, data) {
     var config = MODULES[type];
     if (!config || config.isSettings) return;
 
-    state.modal.isOpen = true;
-    state.modal.type = type;
+    state.modal.isOpen    = true;
+    state.modal.type      = type;
     state.modal.editingId = data ? data.id : null;
 
-    var modal = $("#adminModal");
-    var title = $("#adminModalTitle");
-    var form = $("#adminModalForm");
+    var modal  = $("#adminModal");
+    var title  = $("#adminModalTitle");
+    var form   = $("#adminModalForm");
     var submit = $("#adminModalSubmit");
 
     title.textContent = data
-      ? "Editar " + config.title.toLowerCase().replace(/s$/, "")
-      : "Novo registro · " + config.title;
+      ? "Editar registro"
+      : config.newLabel.replace(/^\+\s*/, "");
 
     form.innerHTML = renderModalForm(config, data);
+    bindUploadButtons(form);
 
-    submit.onclick = function () {
-      saveRecord(type);
-    };
-
-    form.onsubmit = function (e) {
-      e.preventDefault();
-      saveRecord(type);
-    };
+    submit.onclick = function () { saveRecord(type); };
+    form.onsubmit  = function (e) { e.preventDefault(); saveRecord(type); };
 
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
 
-    var first = form.querySelector("input, textarea, select");
+    var first = form.querySelector("input:not([type=file]), textarea, select");
     if (first && typeof first.focus === "function") {
-      window.setTimeout(function () { first.focus(); }, 50);
+      setTimeout(function () { first.focus(); }, 50);
     }
   }
 
   function closeModal() {
     var modal = $("#adminModal");
-    state.modal.isOpen = false;
-    state.modal.type = null;
+    state.modal.isOpen    = false;
+    state.modal.type      = null;
     state.modal.editingId = null;
     if (modal) {
       modal.classList.remove("is-open");
@@ -628,68 +636,157 @@
       if (data && Object.prototype.hasOwnProperty.call(data, f.name)) {
         current = data[f.name];
       } else {
-        current = f.default != null ? f.default : "";
+        if (f.defaultToday)              current = today();
+        else if (f.default != null)      current = f.default;
+        else                             current = "";
       }
 
-      if (f.type === "textarea") {
+      /* Upload field */
+      if (f.type === "upload") {
+        var uVal     = current ? String(current) : "";
+        var preview  = uVal ? '<div class="upload-preview-wrap"><img src="' + esc(uVal) + '" alt="" /></div>' : "";
+        var uploadEl = isSupabaseReady
+          ? '<button type="button" class="upload-btn" data-field="' + esc(f.name) + '" data-bucket="' + esc(f.bucket || "gallery") + '">Carregar arquivo</button>' +
+            '<input type="file" class="file-trigger" data-field="' + esc(f.name) + '" data-bucket="' + esc(f.bucket || "gallery") + '" accept="' + esc(f.accept || "image/*") + '" style="display:none" />'
+          : "";
         return (
           '<label>' + esc(f.label) +
-            '<textarea name="' + esc(f.name) + '" rows="' + (f.rows || 4) + '" ' +
-              (f.required ? "required" : "") +
-              ' placeholder="' + esc(f.placeholder || "") + '">' + esc(current) + '</textarea>' +
+            preview +
+            '<div class="upload-row">' +
+              '<input type="url" name="' + esc(f.name) + '" value="' + esc(uVal) + '" placeholder="' + esc(f.placeholder || "") + '" ' + (f.required ? "required" : "") + ' />' +
+              uploadEl +
+            '</div>' +
           '</label>'
         );
       }
 
+      /* Checkbox */
       if (f.type === "checkbox") {
         var checked = current === false ? "" : "checked";
         return (
-          '<label style="display:flex; flex-direction:row; align-items:center; gap:10px; text-transform:none; letter-spacing:0; font-weight:600;">' +
-            '<input type="checkbox" name="' + esc(f.name) + '" ' + checked + ' style="width:auto;min-height:auto;margin:0;" />' +
+          '<label data-checkbox style="display:flex;flex-direction:row;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-weight:600;font-size:0.88rem;cursor:pointer;">' +
+            '<input type="checkbox" name="' + esc(f.name) + '" ' + checked + ' style="width:auto;min-height:auto;margin:0;cursor:pointer;" />' +
             '<span>' + esc(f.label) + '</span>' +
           '</label>'
         );
       }
 
-      var val = current === 0 || current ? String(current) : "";
+      /* Textarea */
+      if (f.type === "textarea") {
+        return (
+          '<label>' + esc(f.label) +
+            '<textarea name="' + esc(f.name) + '" rows="' + (f.rows || 4) + '" ' + (f.required ? "required" : "") +
+              ' placeholder="' + esc(f.placeholder || "") + '">' + esc(current) + '</textarea>' +
+          '</label>'
+        );
+      }
+
+      /* All other inputs */
+      var val = (current === 0 || current) ? String(current) : "";
       return (
         '<label>' + esc(f.label) +
           '<input type="' + esc(f.type) + '" name="' + esc(f.name) + '" value="' + esc(val) + '" ' +
-            (f.required ? "required" : "") +
-            ' placeholder="' + esc(f.placeholder || "") + '" />' +
+            (f.required ? "required" : "") + ' placeholder="' + esc(f.placeholder || "") + '" />' +
         '</label>'
       );
     }).join("");
   }
 
+  /* ──────────────────────────────────────────────────────────────
+     UPLOAD PARA SUPABASE STORAGE
+  ─────────────────────────────────────────────────────────────── */
+  function bindUploadButtons(form) {
+    $$(".upload-btn", form).forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var field     = btn.getAttribute("data-field");
+        var filePicker = form.querySelector('.file-trigger[data-field="' + field + '"]');
+        if (filePicker) filePicker.click();
+      });
+    });
+
+    $$(".file-trigger", form).forEach(function (input) {
+      input.addEventListener("change", function () { handleFileUpload(input); });
+    });
+  }
+
+  async function handleFileUpload(fileInput) {
+    var file   = fileInput.files[0];
+    if (!file) return;
+
+    var bucket    = fileInput.getAttribute("data-bucket") || "gallery";
+    var field     = fileInput.getAttribute("data-field");
+    var urlInput  = document.querySelector('[name="' + field + '"][type="url"]');
+    var btn       = document.querySelector('.upload-btn[data-field="' + field + '"]');
+    var prevWrap  = btn ? btn.closest("label").querySelector(".upload-preview-wrap") : null;
+
+    if (btn) { btn.textContent = "Enviando…"; btn.disabled = true; }
+
+    try {
+      var ext  = (file.name.split(".").pop() || "jpg").toLowerCase();
+      var safe = ["jpg","jpeg","png","webp","gif","svg"].includes(ext) ? ext : "jpg";
+      var path = Date.now() + "-" + Math.random().toString(36).slice(2, 10) + "." + safe;
+
+      var resp = await supabase.storage.from(bucket).upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || "image/jpeg",
+      });
+
+      if (resp.error) { toast("Erro no upload: " + resp.error.message, "error"); return; }
+
+      var urlResp   = supabase.storage.from(bucket).getPublicUrl(path);
+      var publicUrl = urlResp.data.publicUrl;
+
+      if (urlInput) urlInput.value = publicUrl;
+
+      /* atualiza preview inline */
+      if (prevWrap) {
+        prevWrap.innerHTML = '<img src="' + esc(publicUrl) + '" alt="" />';
+      } else if (urlInput) {
+        var newWrap = document.createElement("div");
+        newWrap.className = "upload-preview-wrap";
+        newWrap.innerHTML = '<img src="' + esc(publicUrl) + '" alt="" />';
+        urlInput.closest(".upload-row").insertAdjacentElement("beforebegin", newWrap);
+      }
+
+      toast("Imagem enviada com sucesso", "success");
+    } catch (err) {
+      toast("Erro inesperado no upload", "error");
+    } finally {
+      if (btn) { btn.textContent = "Carregar arquivo"; btn.disabled = false; }
+      fileInput.value = "";
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     COLETA + VALIDAÇÃO DO FORMULÁRIO
+  ─────────────────────────────────────────────────────────────── */
   function collectModalPayload() {
-    var type = state.modal.type;
+    var type   = state.modal.type;
     var config = MODULES[type];
-    var form = $("#adminModalForm");
+    var form   = $("#adminModalForm");
     var payload = {};
 
     config.fields.forEach(function (f) {
       var el = form.elements[f.name];
       if (!el) return;
 
-      if (f.type === "checkbox") {
-        payload[f.name] = !!el.checked;
+      if (f.type === "checkbox") { payload[f.name] = !!el.checked; return; }
+
+      if (f.type === "upload") {
+        var raw = String(el.value || "").trim();
+        payload[f.name] = raw || null;
         return;
       }
-
-      var raw = String(el.value || "").trim();
 
       if (f.type === "number") {
-        if (raw === "") {
-          payload[f.name] = f.default != null ? f.default : 0;
-        } else {
-          var n = Number(raw);
-          payload[f.name] = isNaN(n) ? 0 : n;
-        }
+        var raw2 = String(el.value || "").trim();
+        payload[f.name] = raw2 === "" ? (f.default != null ? f.default : 0) : (isNaN(Number(raw2)) ? 0 : Number(raw2));
         return;
       }
 
-      payload[f.name] = raw === "" ? null : raw;
+      var v = String(el.value || "").trim();
+      payload[f.name] = v === "" ? null : v;
     });
 
     return payload;
@@ -707,97 +804,72 @@
     return missing;
   }
 
-  /* --- save dispatch + nomes pedidos --- */
+  /* ──────────────────────────────────────────────────────────────
+     SAVE / DELETE
+  ─────────────────────────────────────────────────────────────── */
   async function saveRecord(type) {
-    var config = MODULES[type];
+    var config  = MODULES[type];
     if (!config) return;
 
     var payload = collectModalPayload();
     var missing = validatePayload(config, payload);
-    if (missing.length) {
-      toast("Preencha: " + missing.join(", "), "error");
-      return;
-    }
+    if (missing.length) { toast("Preencha: " + missing.join(", "), "error"); return; }
 
-    var query;
+    var submit = $("#adminModalSubmit");
+    if (submit) { submit.textContent = "Salvando…"; submit.disabled = true; }
+
+    var resp;
     if (state.modal.editingId) {
-      query = supabase.from(config.table).update(payload).eq("id", state.modal.editingId);
+      resp = await supabase.from(config.table).update(payload).eq("id", state.modal.editingId);
     } else {
-      query = supabase.from(config.table).insert(payload);
+      resp = await supabase.from(config.table).insert(payload);
     }
 
-    var resp = await query;
-    if (resp.error) {
-      toast("Erro ao salvar: " + resp.error.message, "error");
-      return;
-    }
+    if (submit) { submit.textContent = "Salvar"; submit.disabled = false; }
 
-    toast(state.modal.editingId ? "Registro atualizado" : "Registro criado", "success");
+    if (resp.error) { toast("Erro ao salvar: " + resp.error.message, "error"); return; }
+
+    toast(state.modal.editingId ? "Registro atualizado" : "Registro criado com sucesso", "success");
     closeModal();
     await loadModule(type);
     await refreshCounts();
   }
 
-  function savePartner()      { return saveRecord("partners"); }
-  function saveProject()      { return saveRecord("projects"); }
-  function saveGalleryImage() { return saveRecord("gallery_images"); }
-  function saveDocument()     { return saveRecord("transparency_documents"); }
-
-  /* --------------- DELETE / TOGGLE --------------- */
   async function deleteRecord(table, id) {
     var resp = await supabase.from(table).delete().eq("id", id);
-    if (resp.error) {
-      toast("Erro ao excluir: " + resp.error.message, "error");
-      return;
-    }
+    if (resp.error) { toast("Erro ao excluir: " + resp.error.message, "error"); return; }
     toast("Registro excluído", "success");
     await loadModule(state.activeSection);
     await refreshCounts();
   }
 
-  async function toggleActive(table, id, currentValue) {
-    var resp = await supabase
-      .from(table)
-      .update({ is_active: !currentValue })
-      .eq("id", id);
-
-    if (resp.error) {
-      toast("Erro ao atualizar status: " + resp.error.message, "error");
-      return;
-    }
-    toast(!currentValue ? "Registro ativado" : "Registro desativado", "success");
-    await loadModule(state.activeSection);
-  }
-
-  /* --------------- NAVEGAÇÃO ENTRE SEÇÕES --------------- */
+  /* ──────────────────────────────────────────────────────────────
+     NAVEGAÇÃO
+  ─────────────────────────────────────────────────────────────── */
   async function switchSection(section) {
-    if (!section) return;
-    if (SECTION_ORDER.indexOf(section) === -1) section = "dashboard";
-
+    if (!section || SECTION_ORDER.indexOf(section) === -1) section = "dashboard";
     state.activeSection = section;
 
-    $$('.admin-nav-item').forEach(function (btn) {
+    $$(".nav-item").forEach(function (btn) {
       btn.classList.toggle("is-active", btn.getAttribute("data-section") === section);
     });
 
-    if (section === "dashboard") {
-      loadDashboard();
-      return;
-    }
-
+    if (section === "dashboard") { loadDashboard(); return; }
     await loadModule(section);
   }
 
-  /* --------------- INIT DASHBOARD PAGE --------------- */
+  /* ──────────────────────────────────────────────────────────────
+     INIT DASHBOARD
+  ─────────────────────────────────────────────────────────────── */
   async function initDashboard() {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseReady) {
       var content = $("#adminContent");
       if (content) {
         content.innerHTML =
           '<div class="admin-empty">' +
             '<div class="admin-empty-icon">!</div>' +
             '<h3>Supabase não configurado</h3>' +
-            '<p>Defina SUPABASE_URL e SUPABASE_ANON_KEY em <code>js/supabase-client.js</code> para usar o painel.</p>' +
+            '<p>Defina SUPABASE_URL e SUPABASE_ANON_KEY em <code>js/supabase-client.js</code>.</p>' +
           '</div>';
       }
       return;
@@ -809,21 +881,19 @@
     var emailEl = $("#sessionEmail");
     if (emailEl) emailEl.textContent = session.user.email || "";
 
-    // sidebar nav
-    $$('.admin-nav-item').forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        switchSection(btn.getAttribute("data-section"));
-      });
+    /* sidebar nav */
+    $$(".nav-item").forEach(function (btn) {
+      btn.addEventListener("click", function () { switchSection(btn.getAttribute("data-section")); });
     });
 
-    // logout
-    var logout = $("#logoutButton");
-    if (logout) logout.addEventListener("click", handleLogout);
+    /* logout */
+    var logoutBtn = $("#logoutButton");
+    if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
 
-    // modal close hooks
+    /* modal close */
     var modal = $("#adminModal");
     if (modal) {
-      $$('[data-modal-close]', modal).forEach(function (el) {
+      $$("[data-modal-close]", modal).forEach(function (el) {
         el.addEventListener("click", closeModal);
       });
     }
@@ -831,40 +901,34 @@
       if (e.key === "Escape" && state.modal.isOpen) closeModal();
     });
 
-    // counters + first paint
+    /* first render */
     await refreshCounts();
     await switchSection("dashboard");
   }
 
-  /* --------------- EXPÕE FUNÇÕES NOMEADAS PEDIDAS --------------- */
-  // Disponíveis em window.acebaAdmin para depuração e contrato com a spec.
+  /* ──────────────────────────────────────────────────────────────
+     API PÚBLICA
+  ─────────────────────────────────────────────────────────────── */
   window.acebaAdmin = {
-    checkSession: checkSession,
-    handleLogout: handleLogout,
+    checkSession:  checkSession,
+    handleLogout:  handleLogout,
     switchSection: switchSection,
     loadDashboard: loadDashboard,
-    loadPartners: loadPartners,
-    loadProjects: loadProjects,
-    loadGallery: loadGallery,
-    loadDocuments: loadDocuments,
-    loadSettings: loadSettings,
-    savePartner: savePartner,
-    saveProject: saveProject,
-    saveGalleryImage: saveGalleryImage,
-    saveDocument: saveDocument,
-    saveSettings: saveSettings,
-    deleteRecord: deleteRecord,
-    toggleActive: toggleActive,
-    openModal: openModal,
-    closeModal: closeModal,
-    toast: toast,
-    esc: esc,
+    loadSettings:  loadSettings,
+    saveSettings:  saveSettings,
+    saveRecord:    saveRecord,
+    deleteRecord:  deleteRecord,
+    openModal:     openModal,
+    closeModal:    closeModal,
+    toast:         toast,
+    esc:           esc,
+    refreshCounts: refreshCounts,
   };
 
-  /* --------------- BOOTSTRAP --------------- */
-  if (isLoginPage()) {
-    initLogin();
-  } else if (isDashboardPage()) {
-    initDashboard();
-  }
+  /* ──────────────────────────────────────────────────────────────
+     BOOTSTRAP
+  ─────────────────────────────────────────────────────────────── */
+  if (isLoginPage())     { initLogin(); }
+  else if (isDashboardPage()) { initDashboard(); }
+
 })();

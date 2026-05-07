@@ -3,31 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ACEBA Admin: Login</title>
+    <title>ACEBA · Acesso administrativo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="admin.css" />
   </head>
   <body class="admin-login-page">
+
     <main class="login-shell">
+
+      <div class="login-logo">
+        <img src="../assets/logos/aceba.png" alt="Logo ACEBA" />
+      </div>
+
       <section class="login-card">
-        <p class="admin-kicker">ACEBA Admin</p>
+        <p class="login-badge">
+          <span class="login-badge-dot"></span> Painel Admin
+        </p>
         <h1>Acesso institucional</h1>
         <p class="login-lead">
-          Entre com o e-mail autorizado no Supabase para gerenciar o conteúdo do site.
+          Entre com o e-mail autorizado para gerenciar parcerias, notícias e galeria do site da ACEBA.
         </p>
 
-        <form id="loginForm" class="admin-form">
+        <form id="loginForm" class="admin-form" novalidate>
           <label>
             E-mail
-            <input type="email" name="email" autocomplete="email" required />
+            <input type="email" name="email" autocomplete="email" placeholder="seu@email.com.br" required />
           </label>
           <label>
             Senha
-            <input type="password" name="password" autocomplete="current-password" required />
+            <input type="password" name="password" autocomplete="current-password" placeholder="••••••••" required />
           </label>
-          <button type="submit" class="admin-button">Entrar</button>
+          <button type="submit" class="admin-button" style="width:100%; margin-top:4px;">Entrar</button>
           <p id="loginStatus" class="admin-status" role="status"></p>
         </form>
       </section>
+
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
