@@ -4,10 +4,11 @@
    - Expõe window.supabaseClient + window.isSupabaseConfigured
    ================================================================ */
 
-const SUPABASE_URL = "https://cgvdzxklsjxudhpmripa.supabase.co";
+const SUPABASE_URL      = "https://cgvdzxklsjxudhpmripa.supabase.co";
+// Cole aqui a "anon public" key do Supabase (Project Settings → API).
+// Deve ser um JWT longo começando com "eyJ..." OU o novo formato "sb_publishable_..."
 const SUPABASE_ANON_KEY = "sb_publishable_NL6uC5IbumZ1BsuHrxHKyw_lCTbacZK";
 
-// Sentinelas: se a URL/key parecerem placeholder, não inicializa.
 const URL_LOOKS_VALID =
   typeof SUPABASE_URL === "string" &&
   /^https:\/\/[a-z0-9-]+\.supabase\.co/i.test(SUPABASE_URL) &&
@@ -15,13 +16,24 @@ const URL_LOOKS_VALID =
 
 const KEY_LOOKS_VALID =
   typeof SUPABASE_ANON_KEY === "string" &&
-  SUPABASE_ANON_KEY.length > 30 &&
+  SUPABASE_ANON_KEY.length > 20 &&
   !/COLE_A|YOUR_SUPABASE|EXEMPLO/i.test(SUPABASE_ANON_KEY);
 
-const supabase =
-  window.supabase && URL_LOOKS_VALID && KEY_LOOKS_VALID
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-    : null;
+let supabase = null;
 
-window.supabaseClient = supabase;
+if (URL_LOOKS_VALID && KEY_LOOKS_VALID) {
+  // Suporta tanto window.supabase (CDN v2 UMD) quanto supabaseJs (algumas builds)
+  const factory = window.supabase || window.supabaseJs;
+  if (factory && typeof factory.createClient === "function") {
+    try {
+      supabase = factory.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+      console.error("[ACEBA] Falha ao criar cliente Supabase:", e);
+    }
+  } else {
+    console.warn("[ACEBA] @supabase/supabase-js não carregado ainda. Verifique a ordem dos <script>.");
+  }
+}
+
+window.supabaseClient      = supabase;
 window.isSupabaseConfigured = Boolean(supabase);
