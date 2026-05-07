@@ -7,7 +7,7 @@
 const SUPABASE_URL      = "https://cgvdzxklsjxudhpmripa.supabase.co";
 // Cole aqui a "anon public" key do Supabase (Project Settings → API).
 // Deve ser um JWT longo começando com "eyJ..." OU o novo formato "sb_publishable_..."
-const SUPABASE_ANON_KEY = "sb_publishable_NL6uC5IbumZ1BsuHrxHKyw_lCTbacZK";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNndmR6eGtsc2p4dWRocG1yaXBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NDM4MTUsImV4cCI6MjA5MzMxOTgxNX0.vepS6cCFpVKo0dWAnmY68Y5hPHtzB5k5ldzP0hp1x1s";
 
 const URL_LOOKS_VALID =
   typeof SUPABASE_URL === "string" &&
