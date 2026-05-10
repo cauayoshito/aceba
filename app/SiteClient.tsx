@@ -245,7 +245,6 @@ export default function SiteClient() {
             <a href="#projetos">Projetos</a>
             <a href="#impacto">Impacto</a>
             <a href="#parcerias">Parcerias</a>
-            <a href="#transparencia">Transparência</a>
             <a href="#contato">Contato</a>
             <a href="#apoie" className="nav-cta">
               Doar agora
@@ -263,7 +262,6 @@ export default function SiteClient() {
           <a href="#impacto">Impacto</a>
           <a href="#depoimentos">Depoimentos</a>
           <a href="#parcerias">Parcerias</a>
-          <a href="#transparencia">Transparência</a>
           <a href="#contato">Contato</a>
           <a href="#apoie" className="mobile-cta">Doar agora</a>
         </nav>
@@ -315,22 +313,6 @@ export default function SiteClient() {
           </div>
         </section>
 
-        {/* Trust strip */}
-        <section className="trust-strip" aria-label="Reconhecimentos e parcerias institucionais">
-          <div className="container trust-strip-inner">
-            <p className="trust-strip-label">Reconhecida e apoiada por</p>
-            <div className="trust-strip-list">
-              <span>CMDCA Camaçari</span><span aria-hidden="true">·</span>
-              <span>SEDUC Camaçari</span><span aria-hidden="true">·</span>
-              <span>SENAC Lauro de Freitas</span><span aria-hidden="true">·</span>
-              <span>Conselho Tutelar</span><span aria-hidden="true">·</span>
-              <span>UBS Vila de Abrantes</span><span aria-hidden="true">·</span>
-              <span>Projeto Agata Smeralda</span><span aria-hidden="true">·</span>
-              <span>Conexão Vida</span>
-            </div>
-          </div>
-        </section>
-
         {/* Sobre */}
         <section className="about section" id="sobre">
           <div className="container about-grid">
@@ -366,14 +348,6 @@ export default function SiteClient() {
                 <div className="timeline-item is-now"><span className="timeline-year">Hoje</span><span className="timeline-text">233 vidas atendidas</span></div>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* Pullquote */}
-        <section className="pullquote">
-          <div className="container">
-            <svg className="pullquote-mark" width="48" height="48" aria-hidden="true"><use href="#i-quote" /></svg>
-            <p className="pullquote-text">Cada criança da ACEBA chega com um nome.<br /><em>Sai com uma identidade.</em></p>
           </div>
         </section>
 
@@ -452,22 +426,6 @@ export default function SiteClient() {
                 <p className="impact-text">No Costurando Sonhos: formação, autonomia e geração de renda.</p>
               </article>
             </div>
-            <div className="impact-rail reveal">
-              <header className="impact-rail-head">
-                <p className="eyebrow eyebrow-on-dark">Como sua doação se transforma</p>
-                <h3>Não é número abstrato. <em>É folha, nome e mês de aula.</em></h3>
-              </header>
-              <ol className="impact-rail-list">
-                <li><p className="rail-amount">R$ 30</p><p className="rail-text">Uma cesta de leitura para uma criança no Piquenique Literário.</p></li>
-                <li><p className="rail-amount">R$ 80</p><p className="rail-text">Um mês de aula de balé ou música para um adolescente do contraturno.</p></li>
-                <li><p className="rail-amount">R$ 150</p><p className="rail-text">Alimentação saudável de uma criança da creche por uma semana.</p></li>
-                <li className="is-highlight"><p className="rail-amount">R$ 500</p><p className="rail-text">Formação completa de uma mulher no Costurando Sonhos por um mês.</p></li>
-              </ol>
-              <a href="#apoie" className="btn btn-terracotta">
-                Quero apoiar agora
-                <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow" /></svg>
-              </a>
-            </div>
           </div>
         </section>
 
@@ -504,9 +462,9 @@ export default function SiteClient() {
           <div className="container">
             <header className="section-head reveal gallery-head">
               <span className="section-num section-num-on-dark">05</span>
-              <p className="eyebrow eyebrow-on-dark">Arquivo visual</p>
-              <h2 className="display on-dark">Momentos que contam <em>nossa história.</em></h2>
-              <p className="section-lead lead-on-dark">Cada atividade é um registro de cuidado, compromisso e esperança. Nossa galeria reúne ações pedagógicas, culturais, comunitárias e formativas dos últimos anos.</p>
+              <p className="eyebrow eyebrow-on-dark">Galeria</p>
+              <h2 className="display on-dark">Galeria de <em>imagens.</em></h2>
+              <p className="section-lead lead-on-dark">Registros de atividades pedagógicas, culturais, comunitárias e formativas realizadas pela ACEBA.</p>
             </header>
             <div className="gallery-grid reveal">
               {[
@@ -547,11 +505,10 @@ export default function SiteClient() {
               <article className="partner-card partner-logo-card">
                 <img src="/logos/cmdca.png" alt="CMDCA Camaçari" />
               </article>
-              {['Monte Rodovia', 'Projeto Agata Smeralda', 'Associação Conexão Vida', 'SEDUC Camaçari', 'UBS de Vila de Abrantes', 'SENAC Lauro de Freitas', 'Conselho Tutelar', 'DIPE', 'Grupos culturais e esportivos da comunidade'].map((name) => (
+              {['Bahia Norte', 'Litoral Norte', 'SEDUC Camaçari', 'SENAC Lauro de Freitas', 'Conselho Tutelar', 'UBS de Vila de Abrantes', 'Projeto Agata Smeralda', 'Associação Conexão Vida', 'DIPE', 'Grupos culturais e esportivos da comunidade'].map((name) => (
                 <article key={name} className="partner-card"><span>{name}</span></article>
               ))}
             </div>
-            <div className="partners-note">Estrutura preparada para receber os logos oficiais dos parceiros assim que forem disponibilizados.</div>
           </div>
         </section>
 
@@ -583,7 +540,7 @@ export default function SiteClient() {
                   <p>A doação cai direto na conta institucional da ACEBA. Você recebe o comprovante por e-mail se nos enviar pelo WhatsApp.</p>
                   <p className="support-tip">
                     <svg width="14" height="14" aria-hidden="true"><use href="#i-shield" /></svg>
-                    Toda doação é registrada na prestação de contas anual, publicada na seção de Transparência.
+                    Toda doação é registrada na prestação de contas anual da ACEBA.
                   </p>
                   <p className="support-suggested-label">Valores sugeridos</p>
                   <div className="support-suggested">
@@ -664,29 +621,6 @@ export default function SiteClient() {
           </div>
         </section>
 
-        {/* Transparência */}
-        <section className="transparency section" id="transparencia">
-          <div className="container">
-            <header className="section-head reveal">
-              <span className="section-num">07</span>
-              <p className="eyebrow">Transparência</p>
-              <h2 className="display">Tudo o que entra, <em>tudo o que sai.</em></h2>
-              <p className="section-lead">Informações institucionais e documentos completos poderão ser disponibilizados mediante solicitação.</p>
-            </header>
-            <div className="transparency-grid reveal">
-              <div className="transparency-cert">
-                <h3>Registros e certificações</h3>
-                <ul>
-                  <li><span className="cert-mark" aria-hidden="true">CNPJ</span><div><strong>05.133.450/0001-76</strong><span>Associação sem fins econômicos</span></div></li>
-                  <li><span className="cert-mark" aria-hidden="true">CMDCA</span><div><strong>Conselho Municipal de Camaçari</strong><span>Habilitada a receber recursos do FIA</span></div></li>
-                  <li><span className="cert-mark" aria-hidden="true">UC</span><div><strong>Utilidade pública municipal</strong><span>Reconhecida pelo município de Camaçari</span></div></li>
-                  <li><span className="cert-mark" aria-hidden="true">SEDUC</span><div><strong>Conveniada com a SEDUC Camaçari</strong><span>Atendimento educacional formal</span></div></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Contato */}
         <section className="contact section" id="contato">
           <div className="container">
@@ -701,7 +635,7 @@ export default function SiteClient() {
                 <ul className="contact-list">
                   <li><span className="contact-label">Endereço</span><span className="contact-value">Rua São Bento, Quadra 3, Lote 13<br />Buris de Abrantes, Vila de Abrantes<br />Camaçari · Bahia · 42825-000</span></li>
                   <li><span className="contact-label">Telefone · WhatsApp</span><span className="contact-value"><a href="tel:+5571997364451">(71) 99736-4451</a></span></li>
-                  <li><span className="contact-label">E-mail</span><span className="contact-value"><a href="mailto:contato@aceba.org.br">contato@aceba.org.br</a></span></li>
+                  <li><span className="contact-label">E-mail</span><span className="contact-value"><a href="mailto:aceba.associacaocomunitaria@gmail.com">aceba.associacaocomunitaria@gmail.com</a></span></li>
                   <li><span className="contact-label">Horário</span><span className="contact-value">Segunda a sexta · 7h30 às 17h<br />Visitas com agendamento prévio.</span></li>
                   <li>
                     <span className="contact-label">Redes</span>
@@ -758,7 +692,7 @@ export default function SiteClient() {
             <div className="footer-cols">
               <div className="footer-col">
                 <h5>Institucional</h5>
-                <ul><li><a href="#sobre">Quem somos</a></li><li><a href="#projetos">Projetos</a></li><li><a href="#impacto">Impacto</a></li><li><a href="#transparencia">Transparência</a></li></ul>
+                <ul><li><a href="#sobre">Quem somos</a></li><li><a href="#projetos">Projetos</a></li><li><a href="#impacto">Impacto</a></li><li><a href="#parcerias">Parcerias</a></li></ul>
               </div>
               <div className="footer-col">
                 <h5>Apoiar</h5>
@@ -769,7 +703,7 @@ export default function SiteClient() {
                 <ul className="footer-contact">
                   <li>Rua São Bento, Quadra 3, Lote 13<br />Buris de Abrantes · Vila de Abrantes<br />Camaçari · BA · 42825-000</li>
                   <li><a href="tel:+5571997364451">(71) 99736-4451</a></li>
-                  <li><a href="mailto:contato@aceba.org.br">contato@aceba.org.br</a></li>
+                  <li><a href="mailto:aceba.associacaocomunitaria@gmail.com">aceba.associacaocomunitaria@gmail.com</a></li>
                 </ul>
                 <div className="footer-social">
                   <a href="#" aria-label="Instagram"><svg width="16" height="16" aria-hidden="true"><use href="#i-instagram" /></svg></a>
