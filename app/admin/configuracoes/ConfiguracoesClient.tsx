@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 
 const FIELDS = [
   { key: 'whatsapp', label: 'WhatsApp (número com DDI)', type: 'text', placeholder: '5571999999999' },
@@ -46,6 +47,7 @@ export default function ConfiguracoesClient({ settings: initial }: Props) {
 
   return (
     <main className="admin-main">
+      <Link href="/admin" className="admin-back-button">← Voltar ao painel</Link>
       <div className="admin-topbar">
         <div>
           <h1 className="admin-page-title">Configurações</h1>

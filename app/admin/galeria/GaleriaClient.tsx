@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { GalleryImage } from '@/lib/types'
+import Link from 'next/link'
 
 interface Props { images: GalleryImage[] }
 
@@ -71,6 +72,7 @@ export default function GaleriaClient({ images: initial }: Props) {
 
   return (
     <main className="admin-main">
+      <Link href="/admin" className="admin-back-button">← Voltar ao painel</Link>
       <div className="admin-topbar">
         <div>
           <h1 className="admin-page-title">Galeria</h1>

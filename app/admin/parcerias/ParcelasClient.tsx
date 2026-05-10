@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Partner } from '@/lib/types'
+import Link from 'next/link'
 
 interface Props { partners: Partner[] }
 
@@ -61,6 +62,7 @@ export default function ParcelasClient({ partners: initial }: Props) {
 
   return (
     <main className="admin-main">
+      <Link href="/admin" className="admin-back-button">← Voltar ao painel</Link>
       <div className="admin-topbar">
         <div>
           <h1 className="admin-page-title">Parcerias</h1>
