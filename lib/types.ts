@@ -25,6 +25,7 @@ export interface NewsItem {
   cover_url?: string | null
   excerpt?: string | null
   content?: string | null
+  link_url?: string | null
   published_at?: string | null
   is_active: boolean
   created_at: string

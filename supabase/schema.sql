@@ -215,6 +215,11 @@ with check (public.is_admin());
 create index if not exists news_active_published_idx
   on public.news (is_active, published_at desc);
 
+-- ================================================================
+-- Schema v3: campo link_url em news (link para post do Instagram)
+-- ================================================================
+alter table public.news add column if not exists link_url text;
+
 insert into storage.buckets (id, name, public)
 values
   ('logos', 'logos', true),

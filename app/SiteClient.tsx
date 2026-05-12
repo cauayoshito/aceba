@@ -1,9 +1,70 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import type { NewsItem } from '@/lib/types'
+
+const INSTAGRAM = 'https://www.instagram.com/crecheesperancadaestiva/'
+
+const FALLBACK_NEWS: NewsItem[] = [
+  {
+    id: 'fb-1',
+    title: 'Maquie e Crie: jovens de Vila de Abrantes aprendem maquiagem artística com o Boticário',
+    category: 'PARCERIA EM DESTAQUE',
+    cover_url: 'https://www.portalabrantes.com.br/images/noticias/36461/0_08122023084819.jpeg',
+    excerpt: 'Em parceria com o Grupo Boticário, a Creche Esperança da Estiva ofereceu curso de maquiagem artística a 50 adolescentes da comunidade — uma ponte entre arte, identidade e geração de renda.',
+    content: null,
+    link_url: INSTAGRAM,
+    published_at: '2023-12-08',
+    is_active: true,
+    created_at: '',
+  },
+  {
+    id: 'fb-2',
+    title: 'Piquenique Literário: quando a leitura vira celebração coletiva',
+    category: 'EDUCAÇÃO',
+    cover_url: '/images/piquenique-literario-geral.jpg',
+    excerpt: 'As crianças do Projeto de Educação Complementar transformaram o pátio em um espaço de histórias, poesia e descoberta. Uma tarde inteira dedicada ao prazer de ler em voz alta.',
+    content: null,
+    link_url: INSTAGRAM,
+    published_at: '2024-09-15',
+    is_active: true,
+    created_at: '',
+  },
+  {
+    id: 'fb-3',
+    title: 'Capoeira na ACEBA: raízes, movimento e identidade cultural',
+    category: 'CULTURA',
+    cover_url: '/images/capoeira-roda-area-externa.jpg',
+    excerpt: 'A roda de capoeira entrou para o calendário permanente da ACEBA como ferramenta de educação corporal e valorização da ancestralidade africana e brasileira.',
+    content: null,
+    link_url: INSTAGRAM,
+    published_at: '2024-06-20',
+    is_active: true,
+    created_at: '',
+  },
+]
+
+function formatNewsDate(dateStr: string) {
+  const d = new Date(dateStr + 'T00:00:00')
+  return d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+    .toUpperCase().replace('.', '')
+}
 
 export default function SiteClient() {
   const initialized = useRef(false)
+  const [news, setNews] = useState<NewsItem[]>(FALLBACK_NEWS)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('news')
+      .select('*')
+      .eq('is_active', true)
+      .order('published_at', { ascending: false })
+      .limit(3)
+      .then(({ data }) => { if (data && data.length > 0) setNews(data as NewsItem[]) })
+  }, [])
 
   useEffect(() => {
     if (initialized.current) return
@@ -281,7 +342,7 @@ export default function SiteClient() {
                 Associação comunitária · Desde 2002
               </p>
               <h1 className="hero-title">
-                Em Vila de Abrantes, <em>233 vidas</em> crescem todos os dias dentro da ACEBA.
+                Em Vila de Abrantes, <em>280 vidas</em> crescem todos os dias dentro da ACEBA.
               </h1>
               <p className="hero-text">
                 A gente mantém a Creche Esperança da Estiva, o Projeto de Educação Complementar e o Costurando Sonhos. <strong>São 23 anos</strong> na mesma comunidade com as mesmas mãos.
@@ -300,9 +361,9 @@ export default function SiteClient() {
             <aside className="hero-card" aria-label="Resumo institucional">
               <p className="hero-card-eyebrow">A ACEBA hoje</p>
               <ul className="hero-card-stats">
-                <li><strong data-count="170">170</strong><span>crianças em educação integral</span></li>
-                <li><strong data-count="43">43</strong><span>adolescentes no contraturno</span></li>
-                <li><strong data-count="20">20</strong><span>mulheres em geração de renda</span></li>
+                <li><strong data-count="160">160</strong><span>crianças em educação integral</span></li>
+                <li><strong data-count="80">80</strong><span>adolescentes no contraturno</span></li>
+                <li><strong data-count="40">40</strong><span>mulheres em geração de renda</span></li>
               </ul>
               <p className="hero-card-foot">Reconhecida pelo CMDCA · Camaçari/BA</p>
             </aside>
@@ -345,7 +406,7 @@ export default function SiteClient() {
                 <div className="timeline-item"><span className="timeline-year">2008</span><span className="timeline-text">Início da Creche Esperança da Estiva</span></div>
                 <div className="timeline-item"><span className="timeline-year">2015</span><span className="timeline-text">Projeto de Educação Complementar</span></div>
                 <div className="timeline-item"><span className="timeline-year">2020</span><span className="timeline-text">Programa Costurando Sonhos</span></div>
-                <div className="timeline-item is-now"><span className="timeline-year">Hoje</span><span className="timeline-text">233 vidas atendidas</span></div>
+                <div className="timeline-item is-now"><span className="timeline-year">Hoje</span><span className="timeline-text">280 vidas atendidas</span></div>
               </div>
             </div>
           </div>
@@ -369,7 +430,7 @@ export default function SiteClient() {
                 <h3>Creche Comunitária<br />Esperança da Estiva</h3>
                 <p>Atendimento em tempo integral para crianças de 2 a 5 anos. Ambiente seguro e acolhedor voltado ao desenvolvimento integral, com foco em identidade, autonomia, diversidade e fortalecimento dos vínculos familiares.</p>
                 <ul className="project-tags"><li>Grupo 2: 2 anos</li><li>Grupo 3: 3 anos</li><li>Grupo 4: 4 anos</li><li>Grupo 5: 5 anos</li></ul>
-                <p className="project-figure"><strong>170</strong> <span>crianças atendidas</span></p>
+                <p className="project-figure"><strong>160</strong> <span>crianças atendidas</span></p>
               </article>
               <article className="project-card">
                 <header className="project-head">
@@ -379,7 +440,7 @@ export default function SiteClient() {
                 <h3>Educação Complementar</h3>
                 <p>Atende crianças e adolescentes no contraturno escolar e fortalece a aprendizagem, a criatividade, a disciplina, a convivência e a expressão cultural.</p>
                 <ul className="project-list"><li>Reforço escolar</li><li>Música e flauta</li><li>Capoeira</li><li>Balé</li><li>Acompanhamento socioeducativo</li></ul>
-                <p className="project-figure"><strong>43</strong> <span>crianças e adolescentes</span></p>
+                <p className="project-figure"><strong>80</strong> <span>crianças e adolescentes</span></p>
               </article>
               <article className="project-card project-card--accent">
                 <header className="project-head">
@@ -389,7 +450,7 @@ export default function SiteClient() {
                 <h3>Costurando Sonhos</h3>
                 <p>Programa de capacitação e geração de renda para mulheres da comunidade, em parceria com o SENAC. Foco em autonomia financeira, autoestima e fortalecimento de vínculos.</p>
                 <ul className="project-list"><li>Costura criativa</li><li>Geração de renda</li><li>Fortalecimento da autoestima</li><li>Parcerias institucionais</li></ul>
-                <p className="project-figure"><strong>20</strong> <span>mulheres capacitadas</span></p>
+                <p className="project-figure"><strong>40</strong> <span>mulheres capacitadas</span></p>
               </article>
             </div>
           </div>
@@ -412,17 +473,17 @@ export default function SiteClient() {
               </article>
               <article className="impact-card">
                 <p className="impact-label">Crianças atendidas</p>
-                <strong data-count="170" data-prefix="+">+170</strong>
+                <strong data-count="160" data-prefix="+">+160</strong>
                 <p className="impact-text">Em educação infantil integral, com alimentação saudável e ações pedagógicas.</p>
               </article>
               <article className="impact-card">
                 <p className="impact-label">No contraturno</p>
-                <strong data-count="43">43</strong>
+                <strong data-count="80">80</strong>
                 <p className="impact-text">Crianças e adolescentes no Projeto de Educação Complementar.</p>
               </article>
               <article className="impact-card">
                 <p className="impact-label">Mulheres capacitadas</p>
-                <strong data-count="20">20</strong>
+                <strong data-count="40">40</strong>
                 <p className="impact-text">No Costurando Sonhos: formação, autonomia e geração de renda.</p>
               </article>
             </div>
@@ -502,12 +563,93 @@ export default function SiteClient() {
               <p>A transformação social acontece em rede. A ACEBA caminha ao lado de instituições públicas, empresas, organizações sociais e grupos comunitários que fortalecem nossas ações e ampliam o alcance do nosso trabalho em Vila de Abrantes.</p>
             </div>
             <div className="partners-grid">
-              <article className="partner-card partner-logo-card">
-                <img src="/logos/cmdca.png" alt="CMDCA Camaçari" />
-              </article>
-              {['Bahia Norte', 'Litoral Norte', 'SEDUC Camaçari', 'SENAC Lauro de Freitas', 'Conselho Tutelar', 'UBS de Vila de Abrantes', 'Projeto Agata Smeralda', 'Associação Conexão Vida', 'DIPE', 'Grupos culturais e esportivos da comunidade'].map((name) => (
+              {['Conselho Municipal da Criança e do Adolescente de Camaçari', 'Bahia Norte', 'Litoral Norte', 'SEDUC Camaçari', 'SENAC Lauro de Freitas', 'UBS de Vila de Abrantes', 'Projeto Agata Smeralda', 'Associação Conexão Vida', 'DIPE', 'Grupos culturais e esportivos da comunidade'].map((name) => (
                 <article key={name} className="partner-card"><span>{name}</span></article>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Notícias */}
+        <section className="news-section section" id="noticias">
+          <div className="container">
+            <header className="section-head reveal">
+              <p className="eyebrow">Notícias &amp; Ações</p>
+              <h2 className="display">Atualizações da <em>Creche.</em></h2>
+              <p className="section-lead">Iniciativas, conquistas e atualizações sobre o trabalho da ACEBA na comunidade de Vila de Abrantes.</p>
+            </header>
+            <div className="news-list reveal">
+              {/* Card destaque */}
+              {news[0] && (
+                <a
+                  href={news[0].link_url || INSTAGRAM}
+                  target="_blank" rel="noopener noreferrer"
+                  className="news-card news-card--featured"
+                  aria-label={news[0].title}
+                >
+                  {news[0].cover_url && (
+                    <div className="news-card-img">
+                      <img src={news[0].cover_url} alt={news[0].title} loading="lazy" decoding="async" />
+                    </div>
+                  )}
+                  <div className="news-card-body">
+                    {news[0].category && (
+                      <span className="news-card-cat-pill">{news[0].category}</span>
+                    )}
+                    <h3 className="news-card-title">{news[0].title}</h3>
+                    {news[0].excerpt && <p className="news-card-excerpt">{news[0].excerpt}</p>}
+                    <div className="news-card-foot">
+                      {news[0].published_at && (
+                        <time className="news-card-date" dateTime={news[0].published_at}>
+                          {formatNewsDate(news[0].published_at)}
+                        </time>
+                      )}
+                      <span className="news-card-insta">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                        @crecheesperancadaestiva
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              )}
+              {/* Cards menores */}
+              {news.length > 1 && (
+                <div className="news-sub-grid">
+                  {news.slice(1, 3).map((item) => (
+                    <a
+                      key={item.id}
+                      href={item.link_url || INSTAGRAM}
+                      target="_blank" rel="noopener noreferrer"
+                      className="news-card"
+                      aria-label={item.title}
+                    >
+                      {item.cover_url && (
+                        <div className="news-card-img">
+                          <img src={item.cover_url} alt={item.title} loading="lazy" decoding="async" />
+                        </div>
+                      )}
+                      <div className="news-card-body">
+                        {item.category && (
+                          <span className="news-card-cat-pill">{item.category}</span>
+                        )}
+                        <h3 className="news-card-title">{item.title}</h3>
+                        {item.excerpt && <p className="news-card-excerpt">{item.excerpt}</p>}
+                        <div className="news-card-foot">
+                          {item.published_at && (
+                            <time className="news-card-date" dateTime={item.published_at}>
+                              {formatNewsDate(item.published_at)}
+                            </time>
+                          )}
+                          <span className="news-card-insta">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                            @crecheesperancadaestiva
+                          </span>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -518,7 +660,7 @@ export default function SiteClient() {
             <header className="section-head reveal support-head">
               <span className="section-num">06</span>
               <p className="eyebrow">Como apoiar</p>
-              <h2 className="display">Não doe pra ACEBA. <em>Doe pra Maria, pro João, pra Dona Cida.</em><br />A gente só repassa.</h2>
+              <h2 className="display">Sua doação chega direto a quem <em>mais precisa.</em></h2>
             </header>
             <div className="support-tabs reveal" role="tablist" aria-label="Formas de apoiar">
               <button className="support-tab is-active" role="tab" aria-selected="true" data-tab="pf">

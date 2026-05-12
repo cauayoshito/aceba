@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://aceba.org.br/',
     title: 'ACEBA: Educar é cuidar. Há 23 anos em Vila de Abrantes.',
-    description: '170 crianças em educação integral, 43 adolescentes no contraturno, 20 mulheres construindo renda. Desde 2002, em Camaçari – Bahia.',
+    description: '160 crianças em educação integral, 80 adolescentes no contraturno, 40 mulheres construindo renda. Desde 2002, em Camaçari – Bahia.',
     images: ['/images/piquenique-literario-geral.jpg'],
     locale: 'pt_BR',
     siteName: 'ACEBA',
