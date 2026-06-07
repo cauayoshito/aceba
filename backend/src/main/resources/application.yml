@@ -50,6 +50,10 @@ stripe:
   publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
 
+# WebSocket (STOMP) allowed browser origin for the SockJS handshake.
+websocket:
+  allowed-origin: ${NEXT_PUBLIC_APP_URL:http://localhost:3000}
+
 # Expose a minimal health endpoint for Docker / load-balancer checks.
 management:
   endpoints:

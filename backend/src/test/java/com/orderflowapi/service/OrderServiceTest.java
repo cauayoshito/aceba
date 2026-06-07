@@ -46,6 +46,9 @@ public class OrderServiceTest {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     @InjectMocks
     private OrderService orderService;
 

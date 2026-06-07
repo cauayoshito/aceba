@@ -54,6 +54,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+        <!-- STOMP/WebSocket for real-time order status updates. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
         <!-- Actuator exposes /actuator/health, used by the Docker healthcheck. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

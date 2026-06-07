@@ -70,6 +70,8 @@ public class SecurityConfig {
                     // Stripe webhook is called by Stripe (no JWT); the request
                     // is authenticated instead by its signature in the controller
                     .requestMatchers("/api/payment/webhook").permitAll()
+                    // WebSocket handshake (SockJS) and STOMP destinations
+                    .requestMatchers("/ws/**", "/topic/**").permitAll()
                     // admin endpoints require ADMIN role
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     // customer endpoints require CLIENTE or ADMIN

@@ -6,9 +6,11 @@ import com.orderflowapi.exception.ResourceNotFoundException;
 import com.orderflowapi.repository.CustomerRepository;
 import com.orderflowapi.repository.OrderRepository;
 import com.orderflowapi.repository.ProductRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,13 +26,29 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public OrderService(OrderRepository orderRepository,
                         CustomerRepository customerRepository,
-                        ProductRepository productRepository) {
+                        ProductRepository productRepository,
+                        SimpMessagingTemplate messagingTemplate) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.productRepository = productRepository;
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    /**
+     * Broadcast an order's current status to subscribers of
+     * {@code /topic/orders/{orderId}}.  No-op if messaging is unavailable.
+     */
+    private void publishStatus(Long orderId, OrderStatus status) {
+        if (messagingTemplate == null) {
+            return;
+        }
+        messagingTemplate.convertAndSend(
+                "/topic/orders/" + orderId,
+                new OrderStatusEvent(orderId, status.name(), Instant.now()));
     }
 
     /**
@@ -136,6 +154,7 @@ public class OrderService {
         }
         order.setStatus(newStatus);
         order = orderRepository.save(order);
+        publishStatus(order.getId(), newStatus);
         return toOrderResponse(order);
     }
 
@@ -150,6 +169,7 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id " + orderId));
         order.setStatus(status);
         orderRepository.save(order);
+        publishStatus(orderId, status);
     }
 
     /**

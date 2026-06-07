@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { api, formatCurrency } from "@/lib/api";
-import { StatusBadge } from "@/components/StatusBadge";
+import { OrderStatusTracker } from "@/components/OrderStatusTracker";
 import type { Order } from "@/lib/types";
 
 export default function OrdersPage() {
@@ -66,12 +67,14 @@ export default function OrdersPage() {
           <div key={order.id} className="card p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold">Pedido #{order.id}</p>
+                <Link href={`/orders/${order.id}`} className="font-semibold hover:text-brand-700">
+                  Pedido #{order.id}
+                </Link>
                 <p className="text-sm text-slate-500">
                   {new Date(order.orderDate).toLocaleString("pt-BR")}
                 </p>
               </div>
-              <StatusBadge status={order.status} />
+              <OrderStatusTracker orderId={order.id} initialStatus={order.status} compact />
             </div>
             <ul className="mt-3 divide-y divide-slate-100 text-sm">
               {order.items.map((item) => (

@@ -35,3 +35,6 @@ stripe:
   secret-key: sk_test_dummy
   publishable-key: pk_test_dummy
   webhook-secret: whsec_test_dummy
+
+websocket:
+  allowed-origin: http://localhost:3000

@@ -19,6 +19,10 @@ Projeto full stack de portfólio: catálogo de produtos, carrinho, checkout, his
 - Checkout com **Stripe** (PaymentIntent + Stripe Elements)
 - Webhook que atualiza o pedido para `PAID` / `PAYMENT_FAILED`
 
+**Tempo real & notificações**
+- Status do pedido **em tempo real** via WebSocket (STOMP/SockJS)
+- E-mails transacionais via **Resend** (confirmação, mudança de status, boas-vindas)
+
 **Painel administrativo**
 - Dashboard: total de vendas, pedidos por status, produtos com estoque baixo e pedidos recentes
 - CRUD de produtos (com estoque)
@@ -49,6 +53,8 @@ Projeto full stack de portfólio: catálogo de produtos, carrinho, checkout, his
 | Backend | Java 17, Spring Boot 3.2, Spring Security + JWT, Spring Data JPA |
 | Banco | PostgreSQL 15 (H2 em memória nos testes) |
 | Pagamentos | Stripe (stripe-java + Stripe.js / React Elements) |
+| Tempo real | WebSocket STOMP + SockJS (`@stomp/stompjs`) |
+| E-mail | Resend (Next.js Route Handlers) |
 | IA | API da Claude (`claude-opus-4-8`) via `RestClient` |
 | Infra | Docker Compose, OpenAPI/Swagger |
 
@@ -117,6 +123,7 @@ Crie contas de cliente pela tela de cadastro.
 | `RESEND_FROM_EMAIL` | frontend | `onboarding@resend.dev` | Remetente dos e-mails. |
 | `INTERNAL_API_SECRET` | frontend | — | Protege as rotas de e-mail internas (vazio = aberto para o navegador em dev). |
 | `NEXT_PUBLIC_APP_URL` | frontend | `http://localhost:3000` | URL base usada nos links dos e-mails. |
+| `NEXT_PUBLIC_WS_URL` | frontend | `ws://localhost:8080/ws` | Endpoint WebSocket (STOMP/SockJS) para status em tempo real. |
 | `JWT_SECRET` | backend | dev secret | Segredo de assinatura dos tokens (troque em produção). |
 | `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` | backend | local Postgres | Conexão com o banco. |
 | `APP_CORS_ALLOWED_ORIGINS` | backend | `http://localhost:3000` | Origens liberadas para o CORS. |
@@ -216,11 +223,45 @@ INTERNAL_API_SECRET=         # opcional
 
 ---
 
+## ⚡ Real-time Updates
+
+O status dos pedidos é atualizado **em tempo real** via **STOMP over SockJS**.
+
+### Como funciona
+
+- O backend expõe um endpoint WebSocket em `/ws` (com fallback SockJS) e um
+  broker in-memory que publica em `/topic/orders/{id}`.
+- Sempre que o status de um pedido muda (admin altera o status, ou um webhook do
+  Stripe marca como `PAID` / `PAYMENT_FAILED`), o `OrderService` envia um
+  `OrderStatusEvent` para `/topic/orders/{id}`.
+- No frontend, o hook `useOrderStatus(orderId)` conecta via STOMP/SockJS,
+  assina o tópico do pedido e recebe as mudanças instantaneamente
+  (reconexão automática com backoff de 3s).
+
+### Páginas com atualização em tempo real
+
+| Página | O que mostra |
+|--------|--------------|
+| `/orders` (Meus pedidos) | Indicador "ao vivo" + status atual por pedido |
+| `/orders/[id]` (Detalhe do pedido) | Stepper completo do status + "última atualização há Xs" |
+
+> Experimente: abra `/orders/{id}` como cliente em uma aba e, em outra, mude o
+> status pelo painel admin (`/admin/orders`) — a página do cliente atualiza
+> sozinha.
+
+### Variável de ambiente
+
+```
+NEXT_PUBLIC_WS_URL=ws://localhost:8080/ws
+```
+
+---
+
 ## 🧪 Testes
 
 ```bash
 cd backend
-mvn test        # 16 testes (unitários + integração em H2, incluindo pagamento)
+mvn test        # 18 testes (unitários + integração em H2: pagamento e WebSocket)
 ```
 
 ```bash
