@@ -41,6 +41,16 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
+    /**
+     * Optional link to the customer profile used when placing orders.  A
+     * customer profile is created automatically when a CLIENTE registers, so
+     * the frontend can resolve "my orders" and checkout from the logged-in
+     * user.  Admin users typically have no customer profile.
+     */
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
     public User() {
     }
 
@@ -88,5 +98,13 @@ public class User {
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 }

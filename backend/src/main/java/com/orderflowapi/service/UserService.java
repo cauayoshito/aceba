@@ -1,8 +1,10 @@
 package com.orderflowapi.service;
 
 import com.orderflowapi.dto.RegisterRequest;
+import com.orderflowapi.entity.Customer;
 import com.orderflowapi.entity.Role;
 import com.orderflowapi.entity.User;
+import com.orderflowapi.repository.CustomerRepository;
 import com.orderflowapi.repository.RoleRepository;
 import com.orderflowapi.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,19 +17,23 @@ import java.util.Set;
 
 /**
  * Service containing business logic for creating new users.  It validates that
- * usernames and emails are unique, encrypts passwords and assigns roles.
+ * usernames and emails are unique, encrypts passwords, assigns roles and — for
+ * customers — provisions a linked {@link Customer} profile so the account can
+ * place and track orders out of the box.
  */
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, RoleRepository roleRepository,
-                       PasswordEncoder passwordEncoder) {
+                       CustomerRepository customerRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.customerRepository = customerRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -41,11 +47,14 @@ public class UserService {
             throw new IllegalArgumentException("Email is already registered");
         }
 
-        // Determine roles to assign
-        Set<Role> roles = new HashSet<>();
-        String requestedRole = Optional.ofNullable(request.getRole()).orElse("CLIENTE");
-        Role role = roleRepository.findByName("ROLE_" + requestedRole.toUpperCase())
+        // Determine roles to assign (defaults to CLIENTE)
+        String requestedRole = Optional.ofNullable(request.getRole())
+                .filter(r -> !r.isBlank())
+                .orElse("CLIENTE")
+                .toUpperCase();
+        Role role = roleRepository.findByName("ROLE_" + requestedRole)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found: " + requestedRole));
+        Set<Role> roles = new HashSet<>();
         roles.add(role);
 
         // Create user entity
@@ -54,6 +63,15 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRoles(roles);
+
+        // Provision a customer profile for shoppers so checkout works immediately
+        if ("CLIENTE".equals(requestedRole)) {
+            Customer customer = new Customer();
+            customer.setName(request.getUsername());
+            customer.setEmail(request.getEmail());
+            customer = customerRepository.save(customer);
+            user.setCustomer(customer);
+        }
 
         return userRepository.save(user);
     }

@@ -13,6 +13,7 @@ import com.orderflowapi.security.JwtService;
 import com.orderflowapi.security.CustomUserDetailsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,7 +22,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -58,16 +61,17 @@ public class AuthController {
     }
 
     /**
-     * Register a new user.  Returns the created user's basic details.
+     * Register a new user.  Validation and uniqueness errors are translated by
+     * {@link com.orderflowapi.exception.GlobalExceptionHandler}.
      */
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
-        try {
-            User user = userService.registerUser(registerRequest);
-            return ResponseEntity.ok("User registered successfully");
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+    public ResponseEntity<Map<String, Object>> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        User user = userService.registerUser(registerRequest);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", "User registered successfully");
+        body.put("id", user.getId());
+        body.put("username", user.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 
     /**
@@ -94,8 +98,9 @@ public class AuthController {
                 .map(com.orderflowapi.entity.Role::getName)
                 .collect(Collectors.toList());
 
+        Long customerId = user.getCustomer() != null ? user.getCustomer().getId() : null;
         AuthResponse response = new AuthResponse(accessToken, refreshToken.getToken(),
-                user.getId(), user.getUsername(), user.getEmail(), roles);
+                user.getId(), user.getUsername(), user.getEmail(), roles, customerId);
         return ResponseEntity.ok(response);
     }
 
@@ -117,19 +122,9 @@ public class AuthController {
         List<String> roles = user.getRoles().stream()
                 .map(com.orderflowapi.entity.Role::getName)
                 .collect(Collectors.toList());
+        Long customerId = user.getCustomer() != null ? user.getCustomer().getId() : null;
         AuthResponse response = new AuthResponse(token, requestRefreshToken,
-                user.getId(), user.getUsername(), user.getEmail(), roles);
+                user.getId(), user.getUsername(), user.getEmail(), roles, customerId);
         return ResponseEntity.ok(response);
     }
-
-    /**
-     * Handle TokenRefreshException by returning a 403 Forbidden response with
-     * the error message.  This prevents leaked stack traces and provides a
-     * clear explanation to API consumers.
-     */
-    @ExceptionHandler(TokenRefreshException.class)
-    public ResponseEntity<String> handleTokenRefreshException(TokenRefreshException ex) {
-        return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).body(ex.getMessage());
-    }
-
 }

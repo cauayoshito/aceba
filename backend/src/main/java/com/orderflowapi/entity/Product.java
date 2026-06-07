@@ -4,10 +4,12 @@ import jakarta.persistence.*;
 
 /**
  * Product entity holds inventory items that can be ordered.  Each product has
- * a name, description and price.  The price is stored as a decimal type to
- * accommodate currency values; using Double may introduce precision issues,
- * but for simplicity in this skeleton Double is used.  In production you may
- * prefer BigDecimal.
+ * a name, description, price and a tracked stock quantity.  Stock enables the
+ * low-stock dashboard widget and prevents overselling when orders are placed.
+ *
+ * The price is stored as a {@code Double} for simplicity in this portfolio
+ * project; a production system handling money should prefer
+ * {@link java.math.BigDecimal} to avoid floating-point rounding issues.
  */
 @Entity
 @Table(name = "products")
@@ -20,19 +22,32 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false)
     private Double price;
 
+    /**
+     * Units currently available to sell.  Defaults to zero so a product is
+     * never accidentally created with phantom inventory.  The order flow
+     * decrements this value and rejects orders that exceed it.
+     */
+    @Column(nullable = false)
+    private Integer stockQuantity = 0;
+
     public Product() {
     }
 
     public Product(String name, String description, Double price) {
+        this(name, description, price, 0);
+    }
+
+    public Product(String name, String description, Double price, Integer stockQuantity) {
         this.name = name;
         this.description = description;
         this.price = price;
+        this.stockQuantity = stockQuantity != null ? stockQuantity : 0;
     }
 
     public Long getId() {
@@ -65,5 +80,13 @@ public class Product {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Integer getStockQuantity() {
+        return stockQuantity;
+    }
+
+    public void setStockQuantity(Integer stockQuantity) {
+        this.stockQuantity = stockQuantity != null ? stockQuantity : 0;
     }
 }

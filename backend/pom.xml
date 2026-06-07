@@ -32,7 +32,8 @@
         <!-- Define the Java release and JJWT version once to easily bump later. -->
         <java.version>17</java.version>
         <jjwt.version>0.11.5</jjwt.version>
-        <springdoc.version>3.0.3</springdoc.version>
+        <!-- springdoc 2.x targets Spring Boot 3.x; the 3.x line targets Spring Boot 4. -->
+        <springdoc.version>2.5.0</springdoc.version>
     </properties>
 
     <dependencies>
@@ -53,6 +54,21 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+        <!-- Actuator exposes /actuator/health, used by the Docker healthcheck. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!--
+          The AI module calls the Claude Messages API directly over HTTP using
+          Spring's built-in RestClient (see AiService).  We intentionally avoid
+          the official anthropic-java SDK here: its current release pulls in
+          Spring Boot 4 / Jackson 3 transitive dependencies that conflict with
+          this project's Spring Boot 3.2 / Jackson 2 baseline.  RestClient keeps
+          the classpath clean and the build reproducible.
+        -->
+
 
         <!-- PostgreSQL JDBC driver. According to guidance on adding the driver for PostgreSQL, only the groupId and artifactId are required – Maven will pull the latest compatible version【704635673434218†L77-L83】. -->
         <dependency>
@@ -98,6 +114,12 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- In-memory database so integration tests run without a real PostgreSQL. -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

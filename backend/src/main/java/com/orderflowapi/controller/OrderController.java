@@ -2,7 +2,6 @@ package com.orderflowapi.controller;
 
 import com.orderflowapi.dto.*;
 import com.orderflowapi.entity.OrderStatus;
-import com.orderflowapi.exception.ResourceNotFoundException;
 import com.orderflowapi.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -100,24 +99,5 @@ public class OrderController {
         }
         OrderResponse updated = orderService.updateOrderStatus(id, status);
         return ResponseEntity.ok(updated);
-    }
-
-    /**
-     * Handle ResourceNotFoundException by returning a 404 response with the
-     * exception message.  This prevents stack traces from being exposed to
-     * clients.
-     */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<String> handleResourceNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
-
-    /**
-     * Handle IllegalStateException thrown when invalid status transitions are
-     * attempted by returning a 400 Bad Request with the error message.
-     */
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<String> handleIllegalState(IllegalStateException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 }

@@ -93,13 +93,20 @@ public class OrderService {
 
         Order order = new Order(customer);
 
-        // Create OrderItems
+        // Create OrderItems, validating availability and decrementing stock so
+        // the same units cannot be sold twice.
         for (OrderItemRequest itemReq : request.getItems()) {
             Product product = productRepository.findById(itemReq.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found with id " + itemReq.getProductId()));
             if (itemReq.getQuantity() <= 0) {
                 throw new IllegalArgumentException("Quantity must be greater than zero for product id " + itemReq.getProductId());
             }
+            int available = product.getStockQuantity() != null ? product.getStockQuantity() : 0;
+            if (itemReq.getQuantity() > available) {
+                throw new IllegalArgumentException("Insufficient stock for product '" + product.getName()
+                        + "' (requested " + itemReq.getQuantity() + ", available " + available + ")");
+            }
+            product.setStockQuantity(available - itemReq.getQuantity());
             OrderItem orderItem = new OrderItem(product, itemReq.getQuantity(), product.getPrice());
             order.addItem(orderItem);
         }
@@ -161,12 +168,10 @@ public class OrderService {
      * aggregates the order items and computes the total value by summing
      * price multiplied by quantity for each item.
      */
-    private OrderResponse toOrderResponse(Order order) {
+    public OrderResponse toOrderResponse(Order order) {
         List<OrderItemResponse> itemResponses = new ArrayList<>();
-        double total = 0.0;
+        double total = calculateTotal(order);
         for (OrderItem item : order.getItems()) {
-            double lineTotal = item.getPrice() * item.getQuantity();
-            total += lineTotal;
             itemResponses.add(new OrderItemResponse(
                     item.getProduct().getId(),
                     item.getProduct().getName(),
@@ -184,5 +189,17 @@ public class OrderService {
                 itemResponses,
                 total
         );
+    }
+
+    /**
+     * Sum of price × quantity across an order's items.  Shared by the response
+     * mapper and the dashboard's total-sales calculation.
+     */
+    public static double calculateTotal(Order order) {
+        double total = 0.0;
+        for (OrderItem item : order.getItems()) {
+            total += item.getPrice() * item.getQuantity();
+        }
+        return total;
     }
 }

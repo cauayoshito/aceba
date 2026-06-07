@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -35,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 @Transactional
 public class OrderControllerIntegrationTest {
 
@@ -75,6 +77,7 @@ public class OrderControllerIntegrationTest {
         product.setName("Integration Product");
         product.setDescription("A product used in integration tests");
         product.setPrice(15.0);
+        product.setStockQuantity(100);
         product = productRepository.save(product);
     }
 

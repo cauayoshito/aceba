@@ -64,6 +64,7 @@ public class OrderServiceTest {
         product.setName("Widget");
         product.setDescription("Test product");
         product.setPrice(10.0);
+        product.setStockQuantity(100);
     }
 
     @Test
@@ -87,10 +88,26 @@ public class OrderServiceTest {
         assertEquals(product.getId(), response.getItems().get(0).getProductId());
         assertEquals(2, response.getItems().get(0).getQuantity());
         assertEquals(20.0, response.getTotal());
+        // Stock is decremented by the ordered quantity
+        assertEquals(98, product.getStockQuantity());
         // Verify that repositories were called correctly
         verify(customerRepository).findById(customer.getId());
         verify(productRepository).findById(product.getId());
         verify(orderRepository).save(any(Order.class));
+    }
+
+    @Test
+    void createOrder_insufficientStock_throwsException() {
+        // Arrange: request more units than are in stock
+        product.setStockQuantity(1);
+        OrderItemRequest itemRequest = new OrderItemRequest(product.getId(), 5);
+        OrderRequest orderRequest = new OrderRequest(customer.getId(), List.of(itemRequest));
+        when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
+        when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> orderService.createOrder(orderRequest));
+        verify(orderRepository, never()).save(any());
     }
 
     @Test

@@ -2,7 +2,6 @@ package com.orderflowapi.controller;
 
 import com.orderflowapi.dto.ProductRequest;
 import com.orderflowapi.dto.ProductResponse;
-import com.orderflowapi.exception.ResourceNotFoundException;
 import com.orderflowapi.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -94,18 +93,5 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * Handle {@link ResourceNotFoundException} thrown by service methods by
-     * returning a 404 status and the exception message.  This avoids leaking
-     * stack traces to clients and ensures consistent error responses.
-     *
-     * @param ex the exception
-     * @return ResponseEntity containing the error message
-     */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<String> handleResourceNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 }
