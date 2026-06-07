@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: orderflow-api
+  # DataSource configuration for PostgreSQL.  These values are overridden when
+  # running via Docker Compose using environment variables.  During local
+  # development you can change the URL, username and password to match your
+  # local database instance.
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orderflow_db
+    username: orderflow
+    password: orderflow
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# JWT configuration.  The secret and token validity are provided here for
+# convenience, but for production deployments you should override these via
+# environment variables or an external secrets manager.  The secret is used to
+# sign and verify JWTs, and expiration controls how long the tokens are valid.
+jwt:
+  secret: ${JWT_SECRET:change-me-to-a-secure-value}
+  expiration: 86400000 # 24 hours in milliseconds
+  # Duration in milliseconds a refresh token remains valid.  This value can
+  # be overridden via the environment variable JWT_REFRESHEXPIRATION.  By default
+  # it's set to seven days (7 * 24 * 60 * 60 * 1000).
+  refreshExpiration: 604800000
+
+# SpringDoc/OpenAPI configuration.  These paths set where the API docs and
+# Swagger UI are served.  The default values from the dependency are used,
+# but they can be customised if you need the UI at a different location.
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
