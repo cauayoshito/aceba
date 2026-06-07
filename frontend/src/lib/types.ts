@@ -24,11 +24,18 @@ export interface OrderItem {
 
 export type OrderStatus =
   | "PENDING"
+  | "PAID"
+  | "PAYMENT_FAILED"
   | "CONFIRMED"
   | "PROCESSING"
   | "SHIPPED"
   | "DELIVERED"
   | "CANCELED";
+
+export interface PaymentIntentResponse {
+  clientSecret: string;
+  publishableKey: string;
+}
 
 export interface Order {
   id: number;

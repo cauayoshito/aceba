@@ -43,6 +43,13 @@ anthropic:
   api-key: ${ANTHROPIC_API_KEY:}
   model: ${ANTHROPIC_MODEL:claude-opus-4-8}
 
+# Stripe payment settings.  Read from the STRIPE_* environment variables.
+# Without a secret key, /api/payment/create-intent returns 503.
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY:}
+  publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+
 # Expose a minimal health endpoint for Docker / load-balancer checks.
 management:
   endpoints:

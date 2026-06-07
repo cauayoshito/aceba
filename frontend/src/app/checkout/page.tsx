@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { api, formatCurrency } from "@/lib/api";
+import { CheckoutForm } from "@/components/CheckoutForm";
 
 export default function CheckoutPage() {
   const { user, loading } = useAuth();
   const { lines, total, clear } = useCart();
   const router = useRouter();
 
-  const [submitting, setSubmitting] = useState(false);
+  const [orderId, setOrderId] = useState<number | null>(null);
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Send unauthenticated users to login, preserving the destination.
@@ -20,7 +22,28 @@ export default function CheckoutPage() {
     if (!loading && !user) router.replace("/login?next=/checkout");
   }, [loading, user, router]);
 
+  // Support arriving at /checkout?orderId=... (e.g. on refresh during payment).
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("orderId");
+    if (fromUrl) setOrderId(Number(fromUrl));
+  }, []);
+
   if (loading || !user) return <p className="text-slate-500">Carregando…</p>;
+
+  // Step 2: order created — collect payment.
+  if (orderId) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <h1 className="mb-6 text-2xl font-bold">Pagamento</h1>
+        <div className="card p-6">
+          <p className="mb-4 text-sm text-slate-600">
+            Pedido <strong>#{orderId}</strong> criado. Conclua o pagamento abaixo.
+          </p>
+          <CheckoutForm orderId={orderId} />
+        </div>
+      </div>
+    );
+  }
 
   if (lines.length === 0) {
     return (
@@ -33,6 +56,7 @@ export default function CheckoutPage() {
     );
   }
 
+  // Step 1: review and create the order.
   async function placeOrder() {
     if (!user?.customerId) {
       setError(
@@ -40,7 +64,7 @@ export default function CheckoutPage() {
       );
       return;
     }
-    setSubmitting(true);
+    setCreating(true);
     setError(null);
     try {
       const order = await api.createOrder(
@@ -48,11 +72,12 @@ export default function CheckoutPage() {
         lines.map((l) => ({ productId: l.product.id, quantity: l.quantity })),
       );
       clear();
-      router.push(`/orders?placed=${order.id}`);
+      setOrderId(order.id);
+      router.replace(`/checkout?orderId=${order.id}`);
     } catch (err: any) {
-      setError(err.message || "Não foi possível finalizar o pedido.");
+      setError(err.message || "Não foi possível criar o pedido.");
     } finally {
-      setSubmitting(false);
+      setCreating(false);
     }
   }
 
@@ -83,8 +108,8 @@ export default function CheckoutPage() {
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-        <button onClick={placeOrder} disabled={submitting} className="btn-primary mt-6 w-full">
-          {submitting ? "Finalizando…" : `Confirmar pedido — ${formatCurrency(total)}`}
+        <button onClick={placeOrder} disabled={creating} className="btn-primary mt-6 w-full">
+          {creating ? "Criando pedido…" : `Continuar para pagamento — ${formatCurrency(total)}`}
         </button>
       </div>
     </div>

@@ -2,6 +2,8 @@ import type { OrderStatus } from "@/lib/types";
 
 const STYLES: Record<OrderStatus, string> = {
   PENDING: "bg-amber-100 text-amber-700",
+  PAID: "bg-green-100 text-green-700",
+  PAYMENT_FAILED: "bg-rose-100 text-rose-700",
   CONFIRMED: "bg-blue-100 text-blue-700",
   PROCESSING: "bg-indigo-100 text-indigo-700",
   SHIPPED: "bg-purple-100 text-purple-700",
@@ -11,6 +13,8 @@ const STYLES: Record<OrderStatus, string> = {
 
 const LABELS: Record<OrderStatus, string> = {
   PENDING: "Pendente",
+  PAID: "Pago",
+  PAYMENT_FAILED: "Pagamento falhou",
   CONFIRMED: "Confirmado",
   PROCESSING: "Em preparação",
   SHIPPED: "Enviado",

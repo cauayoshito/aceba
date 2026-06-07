@@ -69,6 +69,13 @@
           the classpath clean and the build reproducible.
         -->
 
+        <!-- Stripe Java SDK for payments (PaymentIntent + webhook). -->
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>26.3.0</version>
+        </dependency>
+
 
         <!-- PostgreSQL JDBC driver. According to guidance on adding the driver for PostgreSQL, only the groupId and artifactId are required – Maven will pull the latest compatible version【704635673434218†L77-L83】. -->
         <dependency>

@@ -140,6 +140,19 @@ public class OrderService {
     }
 
     /**
+     * Set an order's status directly from a payment webhook, bypassing the
+     * fulfilment transition rules (Stripe is the source of truth for PAID /
+     * PAYMENT_FAILED).  Missing orders are ignored by the caller.
+     */
+    @Transactional
+    public void setPaymentStatus(Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id " + orderId));
+        order.setStatus(status);
+        orderRepository.save(order);
+    }
+
+    /**
      * Determine whether an order can transition from the current status to a
      * desired new status.  This encapsulates business rules governing the
      * order lifecycle.  Cancelled or delivered orders cannot transition to
@@ -152,6 +165,10 @@ public class OrderService {
         switch (current) {
             case PENDING:
                 return target == OrderStatus.CONFIRMED || target == OrderStatus.CANCELED;
+            case PAID:
+                return target == OrderStatus.PROCESSING || target == OrderStatus.CANCELED;
+            case PAYMENT_FAILED:
+                return target == OrderStatus.CANCELED;
             case CONFIRMED:
                 return target == OrderStatus.PROCESSING || target == OrderStatus.CANCELED;
             case PROCESSING:

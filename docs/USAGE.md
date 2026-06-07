@@ -23,8 +23,11 @@ Para habilitar a IA, exporte `ANTHROPIC_API_KEY` antes de subir (veja o README).
 2. **Navegar no catálogo** — a página inicial (`/`) lista os produtos com preço e estoque.
 3. **Adicionar ao carrinho** — clique em "Adicionar ao carrinho". O carrinho fica salvo no navegador.
 4. **Carrinho** — em `/cart` ajuste quantidades ou remova itens.
-5. **Checkout** — em `/checkout` confirme o pedido. É necessário estar logado.
-6. **Meus pedidos** — em `/orders` acompanhe seus pedidos e o status de cada um.
+5. **Checkout** — em `/checkout` revise o resumo e clique em "Continuar para pagamento". O pedido é criado e a tela de pagamento (Stripe) aparece.
+6. **Pagamento** — preencha os dados do cartão (teste: `4242 4242 4242 4242`). Após confirmar, você é redirecionado para `/orders/confirmation`.
+7. **Meus pedidos** — em `/orders` acompanhe seus pedidos e o status de cada um (`PAID` após o pagamento).
+
+> O status `PAID` é definido pelo webhook do Stripe. Em desenvolvimento, rode `stripe listen --forward-to localhost:8080/api/payment/webhook` (veja o README).
 
 > Regra de negócio: o estoque é validado e decrementado ao finalizar o pedido. Não é possível comprar mais unidades do que há em estoque.
 

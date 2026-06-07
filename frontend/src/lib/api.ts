@@ -10,6 +10,7 @@ import type {
   DashboardData,
   Order,
   OrderStatus,
+  PaymentIntentResponse,
   Product,
   ProductInput,
 } from "./types";
@@ -119,6 +120,13 @@ export const api = {
 
   myOrders: (customerId: number) =>
     request<Order[]>(`/api/customer/orders/customer/${customerId}`),
+
+  // ----- Payment (Stripe) -----
+  createPaymentIntent: (orderId: number) =>
+    request<PaymentIntentResponse>("/api/payment/create-intent", {
+      method: "POST",
+      body: { orderId },
+    }),
 
   // ----- Admin: products -----
   createProduct: (input: ProductInput) =>

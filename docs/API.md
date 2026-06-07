@@ -93,6 +93,26 @@ Pedidos de um cliente.
 
 ---
 
+## Pagamentos (Stripe)
+
+### POST `/api/payment/create-intent` (autenticado)
+Cria um PaymentIntent para um pedido existente.
+```json
+{ "orderId": 10 }
+```
+→ `200 OK` `{ "clientSecret": "pi_..._secret_...", "publishableKey": "pk_test_..." }`
+Sem `STRIPE_SECRET_KEY` no backend → `503`.
+
+### POST `/api/payment/webhook` (público)
+Recebe eventos do Stripe. O corpo é lido como **raw** e a assinatura é validada
+com o header `Stripe-Signature` via `Webhook.constructEvent`.
+- `payment_intent.succeeded` → pedido vira `PAID`
+- `payment_intent.payment_failed` → pedido vira `PAYMENT_FAILED`
+
+Assinatura inválida → `400`. Sucesso → `200`.
+
+---
+
 ## Admin — Produtos
 
 ### POST `/api/admin/products`

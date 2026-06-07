@@ -8,6 +8,8 @@ import type { Order, OrderStatus } from "@/lib/types";
 // Mirrors the backend's allowed status transitions for nicer UX.
 const NEXT: Record<OrderStatus, OrderStatus[]> = {
   PENDING: ["CONFIRMED", "CANCELED"],
+  PAID: ["PROCESSING", "CANCELED"],
+  PAYMENT_FAILED: ["CANCELED"],
   CONFIRMED: ["PROCESSING", "CANCELED"],
   PROCESSING: ["SHIPPED", "CANCELED"],
   SHIPPED: ["DELIVERED"],
@@ -17,6 +19,8 @@ const NEXT: Record<OrderStatus, OrderStatus[]> = {
 
 const LABELS: Record<OrderStatus, string> = {
   PENDING: "Pendente",
+  PAID: "Pago",
+  PAYMENT_FAILED: "Pagamento falhou",
   CONFIRMED: "Confirmado",
   PROCESSING: "Em preparação",
   SHIPPED: "Enviado",

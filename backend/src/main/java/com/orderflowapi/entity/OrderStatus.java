@@ -1,11 +1,16 @@
 package com.orderflowapi.entity;
 
 /**
- * Enum listing possible states for an Order.  New values can be added in the
- * future to support additional business states such as RETURNED or REFUNDED.
+ * Possible states for an Order.
+ *
+ * The core fulfilment lifecycle is PENDING → CONFIRMED → PROCESSING → SHIPPED →
+ * DELIVERED, with CANCELED reachable from any active state.  PAID and
+ * PAYMENT_FAILED are driven by Stripe payment webhooks.
  */
 public enum OrderStatus {
     PENDING,
+    PAID,
+    PAYMENT_FAILED,
     CONFIRMED,
     PROCESSING,
     SHIPPED,

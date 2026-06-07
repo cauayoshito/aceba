@@ -67,6 +67,9 @@ public class SecurityConfig {
                     .requestMatchers("/actuator/health", "/").permitAll()
                     // permit authentication and registration endpoints
                     .requestMatchers("/api/auth/**").permitAll()
+                    // Stripe webhook is called by Stripe (no JWT); the request
+                    // is authenticated instead by its signature in the controller
+                    .requestMatchers("/api/payment/webhook").permitAll()
                     // admin endpoints require ADMIN role
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     // customer endpoints require CLIENTE or ADMIN

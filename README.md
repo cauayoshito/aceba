@@ -15,6 +15,10 @@ Projeto full stack de portfólio: catálogo de produtos, carrinho, checkout, his
 - Checkout vinculado à conta do cliente
 - Histórico de "Meus pedidos" com status
 
+**Pagamentos**
+- Checkout com **Stripe** (PaymentIntent + Stripe Elements)
+- Webhook que atualiza o pedido para `PAID` / `PAYMENT_FAILED`
+
 **Painel administrativo**
 - Dashboard: total de vendas, pedidos por status, produtos com estoque baixo e pedidos recentes
 - CRUD de produtos (com estoque)
@@ -44,6 +48,7 @@ Projeto full stack de portfólio: catálogo de produtos, carrinho, checkout, his
 | Frontend | Next.js 14 (App Router), TypeScript, Tailwind CSS |
 | Backend | Java 17, Spring Boot 3.2, Spring Security + JWT, Spring Data JPA |
 | Banco | PostgreSQL 15 (H2 em memória nos testes) |
+| Pagamentos | Stripe (stripe-java + Stripe.js / React Elements) |
 | IA | API da Claude (`claude-opus-4-8`) via `RestClient` |
 | Infra | Docker Compose, OpenAPI/Swagger |
 
@@ -104,6 +109,10 @@ Crie contas de cliente pela tela de cadastro.
 |----------|------|--------|-----------|
 | `ANTHROPIC_API_KEY` | backend | — | Habilita o módulo de IA. Sem ela, os endpoints de IA retornam 503. |
 | `ANTHROPIC_MODEL` | backend | `claude-opus-4-8` | Modelo da Claude usado nas features de IA. |
+| `STRIPE_SECRET_KEY` | backend | — | Habilita pagamentos. Sem ela, `create-intent` retorna 503. |
+| `STRIPE_WEBHOOK_SECRET` | backend | — | Segredo para validar a assinatura do webhook Stripe. |
+| `STRIPE_PUBLISHABLE_KEY` | backend/frontend | — | Chave pública do Stripe (usada no navegador). |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | frontend | — | Chave pública do Stripe inlined no bundle do navegador. |
 | `JWT_SECRET` | backend | dev secret | Segredo de assinatura dos tokens (troque em produção). |
 | `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` | backend | local Postgres | Conexão com o banco. |
 | `APP_CORS_ALLOWED_ORIGINS` | backend | `http://localhost:3000` | Origens liberadas para o CORS. |
@@ -111,11 +120,58 @@ Crie contas de cliente pela tela de cadastro.
 
 ---
 
+## 💳 Stripe Integration
+
+Pagamentos usam o fluxo **PaymentIntent + Stripe Elements**, com um webhook que
+reconcilia o pagamento de volta ao pedido.
+
+### 1. Obter as chaves
+
+No [dashboard.stripe.com](https://dashboard.stripe.com) (modo de teste), em
+**Developers → API keys**, copie:
+- **Publishable key** (`pk_test_...`)
+- **Secret key** (`sk_test_...`)
+
+### 2. Configurar variáveis de ambiente
+
+Backend:
+```bash
+export STRIPE_SECRET_KEY=sk_test_...
+export STRIPE_PUBLISHABLE_KEY=pk_test_...
+export STRIPE_WEBHOOK_SECRET=whsec_...   # gerado no passo 4
+```
+Frontend (`frontend/.env.local`):
+```
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+```
+
+### 3. Fluxo de pagamento
+
+1. No checkout, o pedido é criado (`POST /api/customer/orders`).
+2. O frontend chama `POST /api/payment/create-intent { orderId }` e recebe o `clientSecret`.
+3. O `PaymentElement` confirma o pagamento; o Stripe redireciona para `/orders/confirmation`.
+4. O Stripe envia `payment_intent.succeeded` para o webhook, que marca o pedido como `PAID`.
+
+### 4. Testar localmente com a Stripe CLI
+
+```bash
+# encaminha eventos do Stripe para o webhook local
+stripe listen --forward-to localhost:8080/api/payment/webhook
+# copie o "whsec_..." exibido para STRIPE_WEBHOOK_SECRET e reinicie o backend
+```
+
+Use o cartão de teste **4242 4242 4242 4242**, qualquer data futura, qualquer CVC e CEP.
+
+> Sem `STRIPE_SECRET_KEY` o endpoint `create-intent` retorna **503** e o resto do app
+> continua funcionando.
+
+---
+
 ## 🧪 Testes
 
 ```bash
 cd backend
-mvn test        # 14 testes (unitários + integração em H2)
+mvn test        # 16 testes (unitários + integração em H2, incluindo pagamento)
 ```
 
 ```bash

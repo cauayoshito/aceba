@@ -30,3 +30,8 @@ app:
 anthropic:
   api-key:
   model: claude-opus-4-8
+
+stripe:
+  secret-key: sk_test_dummy
+  publishable-key: pk_test_dummy
+  webhook-secret: whsec_test_dummy
