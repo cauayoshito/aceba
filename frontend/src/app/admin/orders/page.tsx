@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api, formatCurrency } from "@/lib/api";
+import { triggerOrderStatusEmail } from "@/lib/email";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { Order, OrderStatus } from "@/lib/types";
 
@@ -42,9 +43,18 @@ export default function AdminOrdersPage() {
   async function changeStatus(id: number, status: OrderStatus) {
     setBusyId(id);
     setError(null);
+    const previous = orders.find((o) => o.id === id)?.status;
     try {
       const updated = await api.updateOrderStatus(id, status);
       setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+      // Notify the customer of the status change (best-effort).
+      triggerOrderStatusEmail({
+        orderId: updated.id,
+        customerEmail: updated.customerEmail,
+        customerName: updated.customerName,
+        oldStatus: previous ?? "",
+        newStatus: updated.status,
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {

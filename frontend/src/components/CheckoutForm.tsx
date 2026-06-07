@@ -46,12 +46,12 @@ export function CheckoutForm({ orderId }: { orderId: number }) {
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-      <PaymentInner />
+      <PaymentInner orderId={orderId} />
     </Elements>
   );
 }
 
-function PaymentInner() {
+function PaymentInner({ orderId }: { orderId: number }) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -66,7 +66,7 @@ function PaymentInner() {
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/orders/confirmation`,
+        return_url: `${window.location.origin}/orders/confirmation?orderId=${orderId}`,
       },
     });
 

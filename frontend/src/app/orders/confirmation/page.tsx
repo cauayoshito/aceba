@@ -1,20 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { api } from "@/lib/api";
+import { triggerOrderConfirmationEmail } from "@/lib/email";
 
 /**
  * Landing page after Stripe redirects back from payment confirmation.
- * Stripe appends ?payment_intent=...&redirect_status=succeeded|... to the URL.
+ * Stripe appends ?payment_intent=...&redirect_status=succeeded|... to the URL,
+ * and we also carry ?orderId=... through the return_url.
+ *
+ * On success we fetch the order and fire the confirmation email (best-effort).
  */
 export default function PaymentConfirmationPage() {
   const [status, setStatus] = useState<string | null>(null);
   const [paymentIntent, setPaymentIntent] = useState<string | null>(null);
+  const emailSent = useRef(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setStatus(params.get("redirect_status"));
+    const redirectStatus = params.get("redirect_status");
+    const orderId = params.get("orderId");
+    setStatus(redirectStatus);
     setPaymentIntent(params.get("payment_intent"));
+
+    // Send the order confirmation email once, only on a successful payment.
+    const ok = redirectStatus === "succeeded" || redirectStatus === null;
+    if (ok && orderId && !emailSent.current) {
+      emailSent.current = true;
+      api
+        .getOrder(Number(orderId))
+        .then((order) => triggerOrderConfirmationEmail(order))
+        .catch(() => {
+          /* best-effort: ignore */
+        });
+    }
   }, []);
 
   const succeeded = status === "succeeded" || status === null; // default optimistic

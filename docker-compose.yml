@@ -54,6 +54,12 @@ services:
       - backend
     ports:
       - "3000:3000"
+    environment:
+      # Runtime env for the email Route Handlers (server-side).
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-}
 
 volumes:
   postgres-data:

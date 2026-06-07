@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { triggerWelcomeEmail } from "@/lib/email";
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -21,6 +22,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(username, email, password);
+      triggerWelcomeEmail(email, username); // best-effort, fire-and-forget
       router.push("/");
     } catch (err: any) {
       setError(err.message || "Falha ao criar conta.");

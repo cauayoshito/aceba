@@ -113,6 +113,10 @@ Crie contas de cliente pela tela de cadastro.
 | `STRIPE_WEBHOOK_SECRET` | backend | — | Segredo para validar a assinatura do webhook Stripe. |
 | `STRIPE_PUBLISHABLE_KEY` | backend/frontend | — | Chave pública do Stripe (usada no navegador). |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | frontend | — | Chave pública do Stripe inlined no bundle do navegador. |
+| `RESEND_API_KEY` | frontend | — | Habilita e-mails transacionais. Sem ela, as rotas logam e pulam o envio. |
+| `RESEND_FROM_EMAIL` | frontend | `onboarding@resend.dev` | Remetente dos e-mails. |
+| `INTERNAL_API_SECRET` | frontend | — | Protege as rotas de e-mail internas (vazio = aberto para o navegador em dev). |
+| `NEXT_PUBLIC_APP_URL` | frontend | `http://localhost:3000` | URL base usada nos links dos e-mails. |
 | `JWT_SECRET` | backend | dev secret | Segredo de assinatura dos tokens (troque em produção). |
 | `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` | backend | local Postgres | Conexão com o banco. |
 | `APP_CORS_ALLOWED_ORIGINS` | backend | `http://localhost:3000` | Origens liberadas para o CORS. |
@@ -164,6 +168,51 @@ Use o cartão de teste **4242 4242 4242 4242**, qualquer data futura, qualquer C
 
 > Sem `STRIPE_SECRET_KEY` o endpoint `create-intent` retorna **503** e o resto do app
 > continua funcionando.
+
+---
+
+## 📧 Email Notifications
+
+E-mails transacionais são enviados pelo **Resend** a partir de **Route Handlers do
+Next.js** (`/api/email/*`). Os templates são strings HTML em
+`frontend/src/emails/`.
+
+### 1. Obter a API key
+
+Em [resend.com](https://resend.com) → **API Keys**, crie uma chave (`re_...`).
+
+### 2. Domínio de envio
+
+- **Dev:** use `onboarding@resend.dev` como remetente — funciona **sem domínio
+  verificado** (entrega para o e-mail dono da conta Resend).
+- **Produção:** verifique seu domínio no Resend e use algo como `noreply@seudominio.com`.
+
+### 3. E-mails disparados
+
+| E-mail | Quando | Rota | Proteção |
+|--------|--------|------|----------|
+| Boas-vindas | Após cadastro bem-sucedido | `POST /api/email/welcome` | Pública |
+| Confirmação de pedido | Após pagamento aprovado (página de confirmação do Stripe) | `POST /api/email/order-confirmation` | `x-internal-secret`* |
+| Atualização de status | Quando o admin altera o status de um pedido | `POST /api/email/order-status` | `x-internal-secret`* |
+
+\* A proteção é **opcional**: se `INTERNAL_API_SECRET` não estiver definido, as
+rotas aceitam chamadas do navegador (modo demo). Quando definido, exigem o header
+`x-internal-secret` — restringindo-as a chamadas server-to-server (ex.: backend
+Java ou webhook do Stripe).
+
+### 4. Variáveis de ambiente
+
+```bash
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=onboarding@resend.dev
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+INTERNAL_API_SECRET=         # opcional
+```
+
+> **Graceful degradation:** sem `RESEND_API_KEY`, as rotas logam
+> `"Email not sent: RESEND_API_KEY not configured"` e retornam
+> `{ success: true, skipped: true }` — checkout, cadastro e mudança de status
+> continuam funcionando normalmente.
 
 ---
 

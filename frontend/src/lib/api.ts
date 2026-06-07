@@ -121,6 +121,8 @@ export const api = {
   myOrders: (customerId: number) =>
     request<Order[]>(`/api/customer/orders/customer/${customerId}`),
 
+  getOrder: (id: number) => request<Order>(`/api/customer/orders/${id}`),
+
   // ----- Payment (Stripe) -----
   createPaymentIntent: (orderId: number) =>
     request<PaymentIntentResponse>("/api/payment/create-intent", {
