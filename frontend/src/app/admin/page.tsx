@@ -14,18 +14,36 @@ export default function AdminDashboardPage() {
   }, []);
 
   if (error) return <p className="text-sm text-red-600">{error}</p>;
-  if (!data) return <p className="text-slate-500">Carregando indicadores…</p>;
+  if (!data)
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-28 animate-pulse rounded-xl bg-slate-200" />
+        ))}
+      </div>
+    );
 
   return (
     <div className="space-y-8">
       {/* KPI cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Kpi label="Total de vendas" value={formatCurrency(data.totalSales)} accent="text-emerald-600" />
-        <Kpi label="Total de pedidos" value={String(data.totalOrders)} accent="text-brand-600" />
+        <Kpi
+          label="Total de vendas"
+          value={formatCurrency(data.totalSales)}
+          accent="text-emerald-600"
+          border="border-t-emerald-500"
+        />
+        <Kpi
+          label="Total de pedidos"
+          value={String(data.totalOrders)}
+          accent="text-brand-600"
+          border="border-t-indigo-500"
+        />
         <Kpi
           label="Produtos com estoque baixo"
           value={String(data.lowStockProducts.length)}
           accent="text-amber-600"
+          border="border-t-amber-500"
         />
       </div>
 
@@ -91,9 +109,19 @@ export default function AdminDashboardPage() {
   );
 }
 
-function Kpi({ label, value, accent }: { label: string; value: string; accent: string }) {
+function Kpi({
+  label,
+  value,
+  accent,
+  border,
+}: {
+  label: string;
+  value: string;
+  accent: string;
+  border: string;
+}) {
   return (
-    <div className="card p-6">
+    <div className={`card border-t-4 p-6 ${border}`}>
       <p className="text-sm text-slate-500">{label}</p>
       <p className={`mt-2 text-3xl font-bold ${accent}`}>{value}</p>
     </div>
@@ -120,7 +148,7 @@ function AiInsights() {
   }, []);
 
   return (
-    <section className="card p-6">
+    <section className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-6 shadow-sm">
       <div className="mb-1 flex items-center gap-2">
         <span className="text-xl">🤖</span>
         <h2 className="text-lg font-semibold">Insights de IA (Claude)</h2>

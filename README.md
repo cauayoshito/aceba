@@ -1,8 +1,25 @@
 # OrderFlow Commerce Cloud
 
+![Java 17](https://img.shields.io/badge/Java-17-orange?style=flat&logo=openjdk&logoColor=white)
+![Spring Boot 3.2](https://img.shields.io/badge/Spring%20Boot-3.2-6DB33F?style=flat&logo=springboot&logoColor=white)
+![Next.js 14](https://img.shields.io/badge/Next.js-14-000000?style=flat&logo=nextdotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat&logo=postgresql&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-payments-635BFF?style=flat&logo=stripe&logoColor=white)
+![Claude API](https://img.shields.io/badge/Claude%20API-AI-D97757?style=flat&logo=anthropic&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat&logo=typescript&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-compose-2496ED?style=flat&logo=docker&logoColor=white)
+
 > Plataforma completa de pedidos para pequenos negócios — **backend Java/Spring Boot**, **frontend Next.js/TypeScript** e um **módulo de IA** com a API da Claude (Anthropic).
 
 Projeto full stack de portfólio: catálogo de produtos, carrinho, checkout, histórico de pedidos, painel administrativo com dashboard de métricas e recursos de IA (geração de descrições, resumo de vendas e sugestões de reposição de estoque).
+
+## 📸 Screenshots
+
+Screenshots em breve — rode com `docker compose up --build` para ver ao vivo.
+
+## 🌐 Demo
+
+Deploy em progresso. Siga o guia de instalação abaixo.
 
 ---
 
