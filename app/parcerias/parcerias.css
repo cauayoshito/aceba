@@ -1,0 +1,96 @@
+/* ================================================================
+   ACEBA · Página de listagem de Parcerias (/parcerias)
+   Reaproveita tokens de site.css + classes .news-card
+   ================================================================ */
+
+.parcerias-page {
+  background: var(--white);
+  min-height: 100vh;
+  padding-bottom: 96px;
+}
+
+.parcerias-topbar {
+  border-bottom: 1px solid var(--line);
+  background: var(--white);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.parcerias-topbar-inner {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding: 18px var(--pad);
+}
+
+.parcerias-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--green-dark);
+  transition: gap 0.25s var(--ease), color 0.25s var(--ease);
+}
+
+.parcerias-back:hover {
+  gap: 12px;
+  color: var(--green);
+}
+
+.parcerias-container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--pad);
+}
+
+.parcerias-head {
+  padding-block: 56px 44px;
+  max-width: 720px;
+}
+
+.parcerias-eyebrow {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 14px;
+}
+
+.parcerias-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  line-height: 1.12;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.parcerias-lead {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.parcerias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.parcerias-empty {
+  font-family: var(--font-body);
+  color: var(--muted);
+  padding-block: 32px;
+}
+
+@media (max-width: 640px) {
+  .parcerias-head { padding-block: 36px 28px; }
+  .parcerias-grid { grid-template-columns: 1fr; gap: 18px; }
+}
