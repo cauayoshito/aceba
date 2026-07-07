@@ -54,6 +54,20 @@ function formatNewsDate(dateStr: string) {
 export default function SiteClient() {
   const initialized = useRef(false)
   const [news, setNews] = useState<NewsItem[]>(FALLBACK_NEWS)
+  const [activeNews, setActiveNews] = useState<NewsItem | null>(null)
+
+  // Trava o scroll do body e fecha com ESC quando a notícia está aberta
+  useEffect(() => {
+    if (!activeNews) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setActiveNews(null) }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [activeNews])
 
   useEffect(() => {
     const supabase = createClient()
@@ -581,11 +595,11 @@ export default function SiteClient() {
             <div className="news-list reveal">
               {/* Card destaque */}
               {news[0] && (
-                <a
-                  href={news[0].link_url || INSTAGRAM}
-                  target="_blank" rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setActiveNews(news[0])}
                   className="news-card news-card--featured"
-                  aria-label={news[0].title}
+                  aria-label={`Abrir notícia: ${news[0].title}`}
                 >
                   {news[0].cover_url && (
                     <div className="news-card-img">
@@ -604,24 +618,24 @@ export default function SiteClient() {
                           {formatNewsDate(news[0].published_at)}
                         </time>
                       )}
-                      <span className="news-card-insta">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                        @crecheesperancadaestiva
+                      <span className="news-card-more">
+                        Ler notícia
+                        <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow" /></svg>
                       </span>
                     </div>
                   </div>
-                </a>
+                </button>
               )}
               {/* Cards menores */}
               {news.length > 1 && (
                 <div className="news-sub-grid">
                   {news.slice(1, 3).map((item) => (
-                    <a
+                    <button
                       key={item.id}
-                      href={item.link_url || INSTAGRAM}
-                      target="_blank" rel="noopener noreferrer"
+                      type="button"
+                      onClick={() => setActiveNews(item)}
                       className="news-card"
-                      aria-label={item.title}
+                      aria-label={`Abrir notícia: ${item.title}`}
                     >
                       {item.cover_url && (
                         <div className="news-card-img">
@@ -640,13 +654,13 @@ export default function SiteClient() {
                               {formatNewsDate(item.published_at)}
                             </time>
                           )}
-                          <span className="news-card-insta">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                            @crecheesperancadaestiva
+                          <span className="news-card-more">
+                            Ler notícia
+                            <svg width="13" height="13" aria-hidden="true"><use href="#i-arrow" /></svg>
                           </span>
                         </div>
                       </div>
-                    </a>
+                    </button>
                   ))}
                 </div>
               )}
@@ -884,6 +898,70 @@ export default function SiteClient() {
           Doar via Pix
         </a>
       </div>
+
+      {/* Modal de notícia (abre no próprio site) */}
+      {activeNews && (
+        <div
+          className="news-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={activeNews.title}
+          onClick={() => setActiveNews(null)}
+        >
+          <article className="news-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="news-modal-close"
+              aria-label="Fechar notícia"
+              onClick={() => setActiveNews(null)}
+            >
+              <svg width="20" height="20" aria-hidden="true"><use href="#i-close" /></svg>
+            </button>
+
+            {activeNews.cover_url && (
+              <div className="news-modal-img">
+                <img src={activeNews.cover_url} alt={activeNews.title} decoding="async" />
+              </div>
+            )}
+
+            <div className="news-modal-body">
+              <div className="news-modal-meta">
+                {activeNews.category && (
+                  <span className="news-card-cat-pill">{activeNews.category}</span>
+                )}
+                {activeNews.published_at && (
+                  <time className="news-card-date" dateTime={activeNews.published_at}>
+                    {formatNewsDate(activeNews.published_at)}
+                  </time>
+                )}
+              </div>
+
+              <h2 className="news-modal-title">{activeNews.title}</h2>
+
+              <div className="news-modal-content">
+                {activeNews.content
+                  ? activeNews.content.split(/\n\s*\n|\n/).filter(Boolean).map((p, i) => (
+                      <p key={i}>{p}</p>
+                    ))
+                  : activeNews.excerpt && <p>{activeNews.excerpt}</p>}
+              </div>
+
+              {activeNews.link_url && (
+                <a
+                  href={activeNews.link_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="news-modal-link"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                  Ver publicação original
+                  <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow" /></svg>
+                </a>
+              )}
+            </div>
+          </article>
+        </div>
+      )}
     </>
   )
 }
